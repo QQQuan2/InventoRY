@@ -1,42 +1,17 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg
-*.egg-info/
-.eggs/
-build/
-dist/
-
-# 虚拟环境
-.venv/
-venv/
-env/
-ENV/
-
-# 环境配置（含真实账号 / 密码）
-.env
-.env.local
-.env.*.local
-
-# SQLite 数据库（不传 git，留给用户在本地用 init_db.py 重新生成）
+# 数据库文件（含测试数据，不入库）
 *.db
 *.sqlite
 *.sqlite3
 
-# PyCharm / VSCode / Cursor
-.idea/
-.vscode/
-.cursor/
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
 
-# 系统 / 临时文件
+# 环境变量与本地配置
+.env
+
+# 编辑器 / 系统
 .DS_Store
 Thumbs.db
-*.swp
-*.swo
-
-# 日志
-*.log
-logs/
