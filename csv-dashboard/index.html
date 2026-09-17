@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSV 数据可视化仪表盘</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- 第三方库：通过 CDN 引入（Chart.js 负责图表，PapaParse 负责 CSV 解析） -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <!-- 顶部栏：标题 + 上传 + 主题切换 -->
+  <header class="app-header">
+    <div class="app-header__title">
+      <h1>CSV 数据可视化仪表盘</h1>
+      <p class="app-header__subtitle">上传本地 CSV，快速预览、统计与可视化</p>
+    </div>
+    <div class="app-header__actions">
+      <label class="btn btn--primary">
+        上传 CSV
+        <input type="file" id="file-input" accept=".csv,text/csv" hidden />
+      </label>
+      <button class="btn btn--icon" id="theme-toggle" title="切换主题" aria-label="切换深浅色主题">🌙</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 空状态：未上传数据时显示 -->
+    <section id="empty-state" class="empty-state">
+      <div class="empty-state__card">
+        <div class="empty-state__icon">📊</div>
+        <h2>还没有数据</h2>
+        <p>点击右上角「上传 CSV」选择本地文件，或将文件拖拽到下方区域。</p>
+        <label class="btn btn--primary">
+          选择 CSV 文件
+          <input type="file" id="file-input-2" accept=".csv,text/csv" hidden />
+        </label>
+        <div id="drop-zone" class="drop-zone">把 CSV 文件拖到这里</div>
+      </div>
+    </section>
+
+    <!-- 仪表盘：上传数据后显示 -->
+    <div id="dashboard" class="dashboard" hidden>
+      <!-- 概览卡片 -->
+      <section class="section">
+        <div class="stat-cards" id="overview-cards"></div>
+      </section>
+
+      <!-- 基础统计 -->
+      <section class="section">
+        <div class="panel">
+          <div class="panel__head">
+            <h2>基础统计</h2>
+            <label class="field">
+              <span>统计列</span>
+              <select id="stats-column"></select>
+            </label>
+          </div>
+          <div class="stat-cards" id="stats-cards"></div>
+        </div>
+      </section>
+
+      <!-- 图表 -->
+      <section class="section">
+        <div class="panel">
+          <div class="panel__head">
+            <h2>图表</h2>
+            <div class="chart-controls">
+              <label class="field">
+                <span>类型</span>
+                <select id="chart-type">
+                  <option value="bar">柱状图</option>
+                  <option value="line">折线图</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>X 轴</span>
+                <select id="chart-x"></select>
+              </label>
+              <label class="field">
+                <span>Y 轴</span>
+                <select id="chart-y"></select>
+              </label>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart-canvas"></canvas>
+            <p id="chart-hint" class="hint"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 数据表格 -->
+      <section class="section">
+        <div class="panel">
+          <div class="panel__head">
+            <h2>数据预览</h2>
+            <div class="table-actions">
+              <input type="search" id="global-search" class="input" placeholder="全局搜索…" />
+              <button class="btn" id="export-btn">导出筛选结果 CSV</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table id="data-table" class="data-table"></table>
+          </div>
+          <p class="hint" id="table-hint"></p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <span>纯前端 · 数据仅在本地浏览器处理，不会上传任何服务器</span>
+  </footer>
+
+  <!-- 脚本按依赖顺序加载（无构建，普通脚本共享 window.App 命名空间） -->
+  <script src="js/theme.js"></script>
+  <script src="js/csv.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/table.js"></script>
+  <script src="js/chart.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
