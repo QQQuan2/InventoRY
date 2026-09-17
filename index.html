@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>外卖配送系统 · 后台</title>
+  <style>
+    :root {
+      --brand: #1a73e8;
+      --bg:   #f4f6fa;
+      --card: #ffffff;
+      --border: #e6e8ee;
+      --text:  #1f2330;
+      --muted: #6b7280;
+      --warn:  #e8590c;
+      --ok:    #10b981;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    h1   { font-size: 22px; margin: 0; }
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #e8f0fe;
+      color: var(--brand);
+      margin-left: 8px;
+    }
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .status.ok { color: var(--ok); }
+    .status.err { color: #d92d20; }
+
+    section { margin-top: 22px; }
+    section > h2 {
+      font-size: 16px;
+      margin: 0 0 10px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .merchant-name { font-weight: 600; font-size: 15px; }
+    .merchant-meta { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+    .rating {
+      color: #f59e0b; font-weight: 600; font-size: 13px; margin-top: 6px;
+    }
+
+    .order {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 10px 0;
+    }
+    .order-head {
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 600; margin-bottom: 6px;
+    }
+    .order-meta {
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 6px 4px;
+      text-align: left;
+    }
+    th { color: var(--muted); font-weight: 500; }
+    td.price { text-align: right; font-variant-numeric: tabular-nums; }
+    .order-foot {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 10px;
+    }
+    .total {
+      font-size: 18px; font-weight: 700; color: var(--brand);
+    }
+    .actions button {
+      margin-right: 6px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .actions button:hover { background: #f0f2f7; }
+    .actions button:disabled { color: #aaa; cursor: not-allowed; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge.pending_pay     { background: #fff7e6; color: #d97706; }
+    .badge.pending_accept  { background: #e0f2fe; color: #0369a1; }
+    .badge.delivering      { background: #ede9fe; color: #6d28d9; }
+    .badge.completed       { background: #dcfce7; color: #15803d; }
+    .badge.cancelled       { background: #fee2e2; color: #b91c1c; }
+
+    .muted { color: var(--muted); font-size: 13px; }
+
+    footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>外卖配送系统 <span class="pill">Waimai Delivery</span></h1>
+  <div id="apiStatus" class="status">正在连接后端…</div>
+</header>
+
+<section>
+  <h2>商家列表</h2>
+  <div id="merchants" class="grid">加载中…</div>
+</section>
+
+<section>
+  <h2>订单列表</h2>
+  <div id="orders">加载中…</div>
+</section>
+
+<footer>
+  API: <a href="/api/health">/api/health</a> ·
+  <a href="/api/orders">/api/orders</a> ·
+  <a href="/api/merchants">/api/merchants</a>
+</footer>
+
+<script>
+const STATUS_LABEL = {
+  pending_pay:    '待支付',
+  pending_accept: '待接单',
+  delivering:     '配送中',
+  completed:      '已完成',
+  cancelled:      '已取消'
+};
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  })[c]);
+}
+
+async function fetchJson(url, opts) {
+  const r = await fetch(url, opts);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+async function loadMerchants() {
+  const box = document.getElementById('merchants');
+  try {
+    const list = await fetchJson('/api/merchants');
+    if (!list.length) {
+      box.innerHTML = '<div class="muted">暂无商家</div>';
+      return;
+    }
+    box.innerHTML = list.map(m => `
+      <div class="card">
+        <div class="merchant-name">${escapeHtml(m.merchant_name)}</div>
+        <div class="merchant-meta">
+          📞 ${escapeHtml(m.merchant_phone || '—')}<br>
+          📍 ${escapeHtml(m.business_address || '—')}
+        </div>
+        ${m.rating != null ? `<div class="rating">★ ${Number(m.rating).toFixed(1)}</div>` : ''}
+      </div>
+    `).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="muted">加载商家失败：' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+async function loadOrders() {
+  const box = document.getElementById('orders');
+  try {
+    const orders = await fetchJson('/api/orders');
+    if (!orders.length) {
+      box.innerHTML = '<div class="muted">暂无订单</div>';
+      return;
+    }
+    box.innerHTML = orders.map(o => {
+      const detailRows = (o.details || []).map(d => `
+        <tr>
+          <td>${escapeHtml(d.dish_name)}</td>
+          <td>× ${escapeHtml(d.quantity)}</td>
+          <td class="price">¥${Number(d.unit_price).toFixed(2)}</td>
+        </tr>
+      `).join('');
+      const total = Number(o.total_price || 0).toFixed(2);
+      const statusLabel = STATUS_LABEL[o.order_status] || o.order_status;
+      return `
+        <div class="order" data-id="${o.order_id}">
+          <div class="order-head">
+            <span>订单 #${o.order_id} · ${escapeHtml(o.merchant_name)}</span>
+            <span class="badge ${o.order_status}">${escapeHtml(statusLabel)}</span>
+          </div>
+          <div class="order-meta">
+            下单人：${escapeHtml(o.username)}（${escapeHtml(o.phone || '—')}）<br>
+            配送地址：${escapeHtml(o.delivery_address || '—')}<br>
+            下单时间：${escapeHtml(o.order_time || '—')} · 是否要餐具：${o.need_cutlery ? '是' : '否'}
+          </div>
+          <table>
+            <tr><th>菜品</th><th>数量</th><th class="price">单价</th></tr>
+            ${detailRows}
+          </table>
+          <div class="order-foot">
+            <span class="total">合计 ¥${total}</span>
+            <span class="actions">
+              <button data-status="pending_accept">待接单</button>
+              <button data-status="delivering">配送中</button>
+              <button data-status="completed">已完成</button>
+              <button data-status="cancelled">取消</button>
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    box.querySelectorAll('.order').forEach(card => {
+      const id = card.dataset.id;
+      card.querySelectorAll('.actions button').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          try {
+            await fetchJson(`/api/orders/${id}/status`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: btn.dataset.status })
+            });
+            await loadOrders();
+          } catch (e) {
+            alert('修改失败：' + e.message);
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+    });
+  } catch (e) {
+    box.innerHTML = '<div class="muted">加载订单失败：' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+async function checkHealth() {
+  const el = document.getElementById('apiStatus');
+  try {
+    const r = await fetchJson('/api/health');
+    el.textContent = '✓ 后端在线 · ' + r.backend;
+    el.className = 'status ok';
+  } catch (e) {
+    el.textContent = '✗ 后端连接失败：' + e.message;
+    el.className = 'status err';
+  }
+}
+
+(async function init() {
+  await checkHealth();
+  await loadMerchants();
+  await loadOrders();
+})();
+</script>
+</body>
+</html>

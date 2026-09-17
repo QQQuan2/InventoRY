@@ -1,0 +1,7 @@
+# 核心依赖
+Flask>=3.0.0
+Werkzeug>=3.0.0
+
+# 可选依赖（切到 MySQL 时再装）
+# PyMySQL>=1.1.0
+# python-dotenv>=1.0.0
