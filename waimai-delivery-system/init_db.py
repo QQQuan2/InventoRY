@@ -27,8 +27,9 @@ SQL_PATH = os.path.join(BASE_DIR, "schema_sqlite.sql")
 DB_PATH = os.path.join(BASE_DIR, "waimai.db")
 MIGRATE_PATH = os.path.join(BASE_DIR, "migrate_db.py")
 
-# 6 个示例用户，密码统一 123456
-SAMPLE_USERS = ["alice", "bob", "shop_zha", "shop_hu", "shop_guang", "admin"]
+# 10 个示例用户，密码统一 123456
+SAMPLE_USERS = ["alice", "bob", "shop_zha", "shop_hu", "shop_guang", "admin",
+                "xiaomei", "qiang", "lina", "zhou"]
 SAMPLE_PASSWORD = "123456"
 
 

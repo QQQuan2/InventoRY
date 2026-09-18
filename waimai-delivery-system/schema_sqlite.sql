@@ -159,14 +159,19 @@ CREATE INDEX idx_addresses_user ON Addresses(user_id);
 -- 示例数据
 -- ============================================================
 
--- 6 个示例用户（密码统一 123456，init_db.py 会覆盖成真实哈希）
+-- 10 个示例用户（密码统一 123456，init_db.py 会覆盖成真实哈希）
+-- 顾客 4 人 + 骑手 2 人 + 商家 3 人 + 管理员 1 人
 INSERT INTO Users (username, password, phone, role) VALUES
   ('alice',     'placeholder', '13800000001', 'customer'),
   ('bob',       'placeholder', '13800000002', 'rider'),
   ('shop_zha',  'placeholder', '010-12345678', 'merchant'),
   ('shop_hu',   'placeholder', '021-12345678', 'merchant'),
   ('shop_guang','placeholder', '020-12345678', 'merchant'),
-  ('admin',     'placeholder', '13800000000', 'admin');
+  ('admin',     'placeholder', '13800000000', 'admin'),
+  ('xiaomei',   'placeholder', '13800000007', 'customer'),
+  ('qiang',     'placeholder', '13800000008', 'customer'),
+  ('lina',      'placeholder', '13800000009', 'customer'),
+  ('zhou',      'placeholder', '13800000010', 'rider');
 
 -- 3 个商家（绑定到 3 个 merchant 账号）
 INSERT INTO Merchants (user_id, merchant_name, merchant_phone, business_address, rating) VALUES
@@ -185,90 +190,134 @@ INSERT INTO Dishes (merchant_id, dish_name, price, stock, category, emoji) VALUE
   (3, '烧鸭腿饭',     38.0,  50, '主食', '🦆'),
   (3, '冻柠茶',       12.0,  80, '饮品', '🍋');
 
--- 10 个订单：覆盖全部状态 + 分散在最近 7 天（给管理员图表提供数据）
+-- 14 个订单：4 个顾客 + 2 个骑手，覆盖全部状态 + 分散在最近 7 天（给管理员图表提供数据）
+-- 顾客 user_id：alice=1  xiaomei=7  qiang=8  lina=9；骑手：bob=2  zhou=10
 INSERT INTO Orders (user_id, merchant_id, order_time, total_price, order_status,
                     delivery_address, remark, need_cutlery, rider_id,
                     accept_time, claim_time, deliver_time, complete_time) VALUES
-  -- 已完成的 4 单（含评价）
+  -- 一周前：2 单已完成（含评价）
   (1, 1, DATETIME('now','-6 days','-3 hours'), 30.0, 'completed',
       '北京市朝阳区幸福小区 3 号楼 201', '面软一点，多放黄瓜', 1, 2,
       DATETIME('now','-6 days','-3 hours','-10 minutes'),
       DATETIME('now','-6 days','-2 hours','-50 minutes'),
       DATETIME('now','-6 days','-2 hours','-10 minutes'),
       DATETIME('now','-6 days','-2 hours')),
-  (1, 2, DATETIME('now','-5 days','-4 hours'), 35.0, 'completed',
-      '北京市朝阳区幸福小区 3 号楼 201', '少糖', 1, 2,
-      DATETIME('now','-5 days','-4 hours','-8 minutes'),
-      DATETIME('now','-5 days','-3 hours','-40 minutes'),
-      DATETIME('now','-5 days','-3 hours','-5 minutes'),
-      DATETIME('now','-5 days','-3 hours')),
-  (1, 3, DATETIME('now','-3 days','-2 hours'), 70.0, 'completed',
-      '北京市朝阳区幸福小区 3 号楼 201', NULL, 0, 2,
+  (7, 2, DATETIME('now','-6 days','-5 hours'), 35.0, 'completed',
+      '北京市海淀区学院路 15 号学生公寓 6 栋 502', '少糖去冰', 0, 10,
+      DATETIME('now','-6 days','-5 hours','-8 minutes'),
+      DATETIME('now','-6 days','-4 hours','-40 minutes'),
+      DATETIME('now','-6 days','-4 hours','-5 minutes'),
+      DATETIME('now','-6 days','-4 hours')),
+  -- 五天前：2 单已完成
+  (8, 3, DATETIME('now','-5 days','-2 hours'), 70.0, 'completed',
+      '北京市朝阳区望京 SOHO T3 1808', '烧鸭不要辣', 1, 2,
+      DATETIME('now','-5 days','-2 hours','-15 minutes'),
+      DATETIME('now','-5 days','-1 hours','-45 minutes'),
+      DATETIME('now','-5 days','-1 hours','-5 minutes'),
+      DATETIME('now','-5 days','-1 hours')),
+  (9, 1, DATETIME('now','-5 days','-6 hours'), 52.0, 'completed',
+      '北京市海淀区中关村大街 5 号科研楼 8 层', '加两双筷子', 1, 2,
+      DATETIME('now','-5 days','-6 hours','-12 minutes'),
+      DATETIME('now','-5 days','-5 hours','-30 minutes'),
+      DATETIME('now','-5 days','-5 hours'),
+      DATETIME('now','-5 days','-4 hours','-50 minutes')),
+  -- 四天前 / 三天前：各 1 单已完成
+  (1, 2, DATETIME('now','-4 days','-4 hours'), 20.0, 'completed',
+      '北京市朝阳区幸福小区 3 号楼 201', NULL, 1, 10,
+      DATETIME('now','-4 days','-4 hours','-6 minutes'),
+      DATETIME('now','-4 days','-3 hours','-35 minutes'),
+      DATETIME('now','-4 days','-3 hours'),
+      DATETIME('now','-4 days','-2 hours','-55 minutes')),
+  (7, 3, DATETIME('now','-3 days','-2 hours'), 82.0, 'completed',
+      '北京市海淀区学院路 15 号学生公寓 6 栋 502', '和室友一起点的，餐具要 3 套', 1, 2,
       DATETIME('now','-3 days','-2 hours','-15 minutes'),
       DATETIME('now','-3 days','-1 hours','-45 minutes'),
       DATETIME('now','-3 days','-1 hours','-5 minutes'),
       DATETIME('now','-3 days','-1 hours')),
-  (1, 1, DATETIME('now','-2 days','-5 hours'), 52.0, 'completed',
-      '北京市朝阳区幸福小区 3 号楼 201', '加两双筷子', 1, 2,
-      DATETIME('now','-2 days','-5 hours','-12 minutes'),
-      DATETIME('now','-2 days','-4 hours','-30 minutes'),
-      DATETIME('now','-2 days','-4 hours'),
-      DATETIME('now','-2 days','-3 hours','-50 minutes')),
-  -- 昨天的 2 单（已完成 + 已取消）
-  (1, 2, DATETIME('now','-1 day','-6 hours'), 20.0, 'completed',
-      '北京市朝阳区幸福小区 3 号楼 201', NULL, 1, 2,
-      DATETIME('now','-1 day','-6 hours','-6 minutes'),
-      DATETIME('now','-1 day','-5 hours','-35 minutes'),
-      DATETIME('now','-1 day','-5 hours'),
-      DATETIME('now','-1 day','-4 hours','-55 minutes')),
-  (1, 3, DATETIME('now','-1 day','-2 hours'), 12.0, 'cancelled',
-      '北京市朝阳区幸福小区 3 号楼 201', NULL, 1, NULL,
+  -- 两天前：2 单已完成
+  (8, 2, DATETIME('now','-2 days','-3 hours'), 55.0, 'completed',
+      '北京市朝阳区望京 SOHO T3 1808', '下午茶，尽快送', 0, 10,
+      DATETIME('now','-2 days','-3 hours','-10 minutes'),
+      DATETIME('now','-2 days','-2 hours','-40 minutes'),
+      DATETIME('now','-2 days','-2 hours'),
+      DATETIME('now','-2 days','-1 hours','-50 minutes')),
+  (9, 3, DATETIME('now','-2 days','-6 hours'), 44.0, 'completed',
+      '北京市海淀区中关村大街 5 号科研楼 8 层', NULL, 1, 2,
+      DATETIME('now','-2 days','-6 hours','-8 minutes'),
+      DATETIME('now','-2 days','-5 hours','-35 minutes'),
+      DATETIME('now','-2 days','-5 hours'),
+      DATETIME('now','-2 days','-4 hours','-55 minutes')),
+  -- 昨天：1 单已完成 + 1 单已取消
+  (1, 1, DATETIME('now','-1 day','-5 hours'), 22.0, 'completed',
+      '北京市朝阳区幸福小区 3 号楼 201', NULL, 1, 10,
+      DATETIME('now','-1 day','-5 hours','-6 minutes'),
+      DATETIME('now','-1 day','-4 hours','-35 minutes'),
+      DATETIME('now','-1 day','-4 hours'),
+      DATETIME('now','-1 day','-3 hours','-55 minutes')),
+  (7, 1, DATETIME('now','-1 day','-2 hours'), 38.0, 'cancelled',
+      '北京市海淀区学院路 15 号学生公寓 6 栋 502', NULL, 1, NULL,
       NULL, NULL, NULL, NULL),
-  -- 今天：待商家接单 / 待骑手抢单 / 配送中 / 已送达各 1 单
-  (1, 1, DATETIME('now','-20 minutes'), 30.0, 'pending_accept',
-      '北京市朝阳区幸福小区 3 号楼 201', '不要香菜', 1, NULL, NULL, NULL, NULL, NULL),
-  (1, 2, DATETIME('now','-40 minutes'), 35.0, 'accepted',
-      '北京市朝阳区幸福小区 3 号楼 201', NULL, 1, NULL,
+  -- 今天：已送达 / 配送中 / 商家已接单 / 待商家接单 各 1 单
+  (8, 1, DATETIME('now','-2 hours','-30 minutes'), 30.0, 'delivered',
+      '北京市朝阳区望京 SOHO T3 1808', '不要香菜', 1, 2,
+      DATETIME('now','-2 hours','-25 minutes'),
+      DATETIME('now','-2 hours'),
+      DATETIME('now','-40 minutes'), NULL),
+  (9, 2, DATETIME('now','-1 hours','-10 minutes'), 35.0, 'delivering',
+      '北京市海淀区中关村大街 5 号科研楼 8 层', '放前台就行', 0, 10,
+      DATETIME('now','-1 hours','-5 minutes'), DATETIME('now','-35 minutes'), NULL, NULL),
+  (1, 3, DATETIME('now','-40 minutes'), 70.0, 'accepted',
+      '北京市朝阳区幸福小区 3 号楼 201', '叉烧饭加汁', 1, NULL,
       DATETIME('now','-35 minutes'), NULL, NULL, NULL),
-  (1, 3, DATETIME('now','-1 hours'), 70.0, 'delivering',
-      '北京市朝阳区幸福小区 3 号楼 201', '放前台就行', 0, 2,
-      DATETIME('now','-55 minutes'), DATETIME('now','-30 minutes'), NULL, NULL),
-  (1, 1, DATETIME('now','-2 hours'), 30.0, 'delivered',
-      '北京市朝阳区幸福小区 3 号楼 201', NULL, 1, 2,
-      DATETIME('now','-2 hours','-10 minutes'),
-      DATETIME('now','-1 hours','-30 minutes'),
-      DATETIME('now','-50 minutes'), NULL);
+  (7, 2, DATETIME('now','-20 minutes'), 35.0, 'pending_accept',
+      '北京市海淀区学院路 15 号学生公寓 6 栋 502', NULL, 0, NULL,
+      NULL, NULL, NULL, NULL);
 
 INSERT INTO Order_Details (order_id, dish_id, quantity, unit_price) VALUES
   (1, 1, 1, 22.0), (1, 2, 1,  8.0),
   (2, 4, 1, 15.0), (2, 5, 1, 20.0),
   (3, 6, 1, 32.0), (3, 7, 1, 38.0),
-  (4, 1, 2, 22.0), (4, 3, 1, 10.0),
+  (4, 1, 2, 22.0), (4, 2, 1,  8.0),
   (5, 5, 1, 20.0),
-  (6, 8, 1, 12.0),
-  (7, 1, 1, 22.0), (7, 2, 1,  8.0),
-  (8, 4, 1, 15.0), (8, 5, 1, 20.0),
-  (9, 6, 1, 32.0), (9, 7, 1, 38.0),
-  (10, 1, 1, 22.0), (10, 2, 1, 8.0);
+  (6, 6, 1, 32.0), (6, 7, 1, 38.0), (6, 8, 1, 12.0),
+  (7, 4, 1, 15.0), (7, 5, 2, 20.0),
+  (8, 6, 1, 32.0), (8, 8, 1, 12.0),
+  (9, 1, 1, 22.0),
+  (10, 7, 1, 38.0),
+  (11, 1, 1, 22.0), (11, 2, 1,  8.0),
+  (12, 4, 1, 15.0), (12, 5, 1, 20.0),
+  (13, 6, 1, 32.0), (13, 7, 1, 38.0),
+  (14, 4, 1, 15.0), (14, 5, 1, 20.0);
 
--- 配送记录（配送中 / 已完成 / 已送达 的单）
+-- 配送记录（已完成 / 配送中的单，两位骑手交替接单）
 INSERT INTO Deliveries (order_id, rider_id, delivery_status, pickup_time, complete_time) VALUES
   (1, 2, 'completed', DATETIME('now','-6 days','-2 hours','-50 minutes'), DATETIME('now','-6 days','-2 hours','-10 minutes')),
-  (2, 2, 'completed', DATETIME('now','-5 days','-3 hours','-40 minutes'), DATETIME('now','-5 days','-3 hours','-5 minutes')),
-  (3, 2, 'completed', DATETIME('now','-3 days','-1 hours','-45 minutes'), DATETIME('now','-3 days','-1 hours','-5 minutes')),
-  (4, 2, 'completed', DATETIME('now','-2 days','-4 hours','-30 minutes'), DATETIME('now','-2 days','-4 hours')),
-  (5, 2, 'completed', DATETIME('now','-1 day','-5 hours','-35 minutes'),  DATETIME('now','-1 day','-5 hours')),
-  (9, 2, 'delivering', DATETIME('now','-30 minutes'), NULL),
-  (10, 2, 'completed', DATETIME('now','-1 hours','-30 minutes'), DATETIME('now','-50 minutes'));
+  (2, 10, 'completed', DATETIME('now','-6 days','-4 hours','-40 minutes'), DATETIME('now','-6 days','-4 hours','-5 minutes')),
+  (3, 2, 'completed', DATETIME('now','-5 days','-1 hours','-45 minutes'), DATETIME('now','-5 days','-1 hours','-5 minutes')),
+  (4, 2, 'completed', DATETIME('now','-5 days','-5 hours','-30 minutes'), DATETIME('now','-5 days','-5 hours')),
+  (5, 10, 'completed', DATETIME('now','-4 days','-3 hours','-35 minutes'), DATETIME('now','-4 days','-3 hours')),
+  (6, 2, 'completed', DATETIME('now','-3 days','-1 hours','-45 minutes'), DATETIME('now','-3 days','-1 hours','-5 minutes')),
+  (7, 10, 'completed', DATETIME('now','-2 days','-2 hours','-40 minutes'), DATETIME('now','-2 days','-2 hours')),
+  (8, 2, 'completed', DATETIME('now','-2 days','-5 hours','-35 minutes'), DATETIME('now','-2 days','-5 hours')),
+  (9, 10, 'completed', DATETIME('now','-1 day','-4 hours','-35 minutes'), DATETIME('now','-1 day','-4 hours')),
+  (11, 2, 'completed', DATETIME('now','-2 hours'), DATETIME('now','-40 minutes')),
+  (12, 10, 'delivering', DATETIME('now','-35 minutes'), NULL);
 
--- 历史评价（含商家回复）
+-- 历史评价（顾客与订单一致，含商家回复）
 INSERT INTO Comments (order_id, user_id, score, comment_content, comment_time, reply_content, reply_time) VALUES
   (1, 1, 5, '炸酱面很正宗，黄瓜爽口，骑手小哥超快！', DATETIME('now','-6 days','-2 hours'), '谢谢亲的认可，欢迎常来～', DATETIME('now','-6 days','-1 hours')),
-  (2, 1, 4, '奶茶不错，就是有点排队久。', DATETIME('now','-5 days','-3 hours'), '抱歉让您久等啦，下次提前做～', DATETIME('now','-5 days','-2 hours')),
-  (3, 1, 5, '烧腊份量十足，冻柠茶解腻。', DATETIME('now','-3 days','-1 hours'), NULL, NULL),
-  (4, 1, 4, '面还是那个味，稳定发挥。', DATETIME('now','-2 days','-3 hours'), NULL, NULL);
+  (2, 7, 4, '奶茶挺好喝的，就是配送稍微慢了一点。', DATETIME('now','-6 days','-3 hours'), '抱歉让您久等啦，下次提前做～', DATETIME('now','-6 days','-2 hours')),
+  (3, 8, 5, '烧腊份量十足，冻柠茶解腻，公司午饭首选。', DATETIME('now','-5 days','-1 hours'), NULL, NULL),
+  (4, 9, 4, '面不错，实验室下午加餐刚刚好。', DATETIME('now','-5 days','-4 hours'), NULL, NULL),
+  (6, 7, 5, '和室友拼单超划算，餐具也贴心地给了 3 套！', DATETIME('now','-3 days','-30 minutes'), '感谢支持环保～', DATETIME('now','-3 days','-20 minutes')),
+  (7, 8, 3, '奶茶送到有点化了，口感一般。', DATETIME('now','-2 days','-1 hours'), NULL, NULL),
+  (8, 9, 4, '烧鸭腿饭很香，会回购。', DATETIME('now','-2 days','-4 hours'), NULL, NULL),
+  (9, 1, 4, '面还是那个味，稳定发挥。', DATETIME('now','-1 day','-3 hours'), NULL, NULL);
 
--- 示例地址簿：给 alice 两个地址（默认"家"）
+-- 示例地址簿：每个顾客 1-2 个地址
 INSERT INTO Addresses (user_id, receiver_name, receiver_phone, address_label, detail_address, is_default) VALUES
   (1, '李芊泉', '13800000001', '家',     '北京市朝阳区幸福小区 3 号楼 201',     1),
-  (1, '李芊泉', '13800000001', '实验室', '北京市海淀区中关村大街 5 号科研楼 8 层', 0);
+  (1, '李芊泉', '13800000001', '实验室', '北京市海淀区中关村大街 5 号科研楼 8 层', 0),
+  (7, '肖梅',   '13800000007', '宿舍',   '北京市海淀区学院路 15 号学生公寓 6 栋 502', 1),
+  (8, '强子',   '13800000008', '公司',   '北京市朝阳区望京 SOHO T3 1808', 1),
+  (9, '李娜',   '13800000009', '家',     '北京市海淀区中关村大街 5 号科研楼 8 层', 1);
