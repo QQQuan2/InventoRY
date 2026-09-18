@@ -8,7 +8,7 @@
 
 《管理信息系统》课程期末项目：一个可以真正跑起来的外卖点餐与配送管理系统，四种角色数据互相联动。
 
-🎬 **在线预览（截图 + 功能导览）**：[外卖系统 · 在线预览](https://qqquan2.github.io/InventoRY/waimai-preview/) —— 点开就能看到系统每个界面长什么样
+🎬 **在线预览**：[外卖系统 · 在线预览](https://qqquan2.github.io/InventoRY/waimai-preview/) 
 
 🚀 **本地试运行（3 步）**：
 ```powershell
@@ -34,7 +34,7 @@ python app.py         # 启动服务
 
 上传本地 CSV 文件，即可快速预览、统计与可视化的纯前端仪表盘。
 
-🎬 **在线试运行**：[CSV 仪表盘 · 立即使用](https://qqquan2.github.io/InventoRY/csv-dashboard/) —— 纯前端，点开就能用
+🎬 **在线试运行**：[CSV 仪表盘 · 立即使用](https://qqquan2.github.io/InventoRY/csv-dashboard/) 
 
 - **技术栈**：HTML / CSS / JS · Chart.js（图表）· PapaParse（CSV 解析）
 - **核心功能**：
@@ -46,4 +46,4 @@ python app.py         # 启动服务
 
 ---
 
-> 💡 更多项目持续更新中 ✨
+> 💡 更多项目持续更新中 ✨欢迎交流指正！
