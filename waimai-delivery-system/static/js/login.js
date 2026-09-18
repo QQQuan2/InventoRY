@@ -65,7 +65,7 @@ document.querySelectorAll("#roleGrid .role-card").forEach(card => {
 
 document.getElementById("btnRegister").addEventListener("click", async () => {
   const btn = document.getElementById("btnRegister");
-  const role = currentRole === "admin" ? "customer" : currentRole; // 管理员不开放注册
+  const role = currentRole; // 四种身份均可注册（含管理员，课程演示需要）
   try {
     btn.disabled = true; btn.textContent = "注册中…";
     await API.post("/api/auth/register", {

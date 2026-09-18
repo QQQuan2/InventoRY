@@ -153,17 +153,37 @@ async function loadUsers() {
   const users = await API.get("/api/admin/users");
   const roleLabels = { customer: "顾客", rider: "骑手", merchant: "商家", admin: "管理员" };
   box.innerHTML = `
+    <p class="muted" style="margin:0 0 10px;font-size:13px">
+      共 ${users.length} 个账号 · 密码以 PBKDF2 加密哈希存储（明文不可还原）；
+      管理员可将任意账号密码重置为新密码。
+    </p>
     <table class="list">
-      <thead><tr><th>ID</th><th>用户名</th><th>身份</th><th>手机号</th><th>注册时间</th></tr></thead>
+      <thead><tr><th>ID</th><th>用户名</th><th>身份</th><th>手机号</th><th>密码（哈希）</th><th>注册时间</th><th>操作</th></tr></thead>
       <tbody>` + users.map(u => `
         <tr>
           <td>${u.user_id}</td>
           <td><b>${u.username}</b></td>
           <td><span class="role-tag">${roleLabels[u.role] || u.role}</span></td>
           <td class="muted">${u.phone || "—"}</td>
+          <td class="muted" style="font-family:monospace;font-size:11px;max-width:260px;word-break:break-all">
+            ${u.password_hash || "—"}
+          </td>
           <td class="muted">${fmtTime(u.created_at)}</td>
+          <td><button class="btn ghost" style="padding:4px 10px;font-size:12px"
+              onclick="resetUserPwd(${u.user_id}, '${u.username}')">重置密码</button></td>
         </tr>`).join("") + `</tbody>
     </table>`;
+}
+
+async function resetUserPwd(userId, username) {
+  const pwd = prompt(`为用户「${username}」设置新密码（至少 6 位）：`);
+  if (pwd === null) return;
+  if (pwd.length < 6) { toast("新密码至少 6 位", false); return; }
+  try {
+    await API.put(`/api/admin/users/${userId}/reset-password`, { new_password: pwd });
+    toast(`已重置「${username}」的密码，新密码：${pwd}`);
+    loadUsers();
+  } catch (e) { toast(e.message, false); }
 }
 
 /* ================= 启动 ================= */

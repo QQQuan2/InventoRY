@@ -300,8 +300,8 @@ def auth_register():
         return _bad("用户名和密码必填")
     if len(password) < 6:
         return _bad("密码至少 6 位")
-    if role not in ("customer", "rider", "merchant"):
-        return _bad("注册角色只能是 顾客 / 骑手 / 商家")
+    if role not in ("customer", "rider", "merchant", "admin"):
+        return _bad("注册角色只能是 顾客 / 骑手 / 商家 / 管理员")
     if not re.fullmatch(r"[\w\u4e00-\u9fa5]{2,20}", username):
         return _bad("用户名需为 2-20 位字母、数字、下划线或中文")
 
@@ -1212,13 +1212,37 @@ def admin_users():
     require_role("admin")
     with db.cursor() as cur:
         cur.execute(
-            f"SELECT user_id, username, role, phone, created_at FROM Users ORDER BY user_id"
+            f"SELECT user_id, username, role, phone, password, created_at FROM Users ORDER BY user_id"
         )
         rows = _to_dicts(cur.fetchall())
     for r in rows:
         if r.get("created_at") is not None:
             r["created_at"] = str(r["created_at"])
+        # 密码以 PBKDF2 哈希展示（明文不可还原），同时返回算法与 salt 便于课程演示
+        if r.get("password"):
+            algo, _, salt_hash = r["password"].partition("$")
+            r["password_algo"] = algo
+            r["password_hash"] = r["password"]
     return jsonify(rows)
+
+
+@app.put("/api/admin/users/<int:user_id>/reset-password")
+def admin_reset_password(user_id: int):
+    """管理员重置任意用户密码（课程演示：管理员掌握全量账号数据）。"""
+    require_role("admin")
+    body = request.get_json(force=True, silent=True) or {}
+    new_password = body.get("new_password") or ""
+    if len(new_password) < 6:
+        return _bad("新密码至少 6 位")
+    with db.cursor() as cur:
+        cur.execute(f"SELECT user_id FROM Users WHERE user_id = {PH}", (user_id,))
+        if not cur.fetchone():
+            return _bad("用户不存在", 404)
+        cur.execute(
+            f"UPDATE Users SET password = {PH} WHERE user_id = {PH}",
+            (generate_password_hash(new_password, method="pbkdf2:sha256"), user_id),
+        )
+    return jsonify({"ok": True, "message": f"已重置用户 {user_id} 的密码"})
 
 
 # ----------------------------------------------------------------------

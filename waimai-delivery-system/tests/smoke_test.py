@@ -110,8 +110,8 @@ def main() -> int:
     check("注册骑手", st == 200)
     st, data = req("POST", "/api/auth/register", {"username": "test_cust", "password": "abc12345", "role": "customer"})
     check("重复用户名被拒绝", st == 400)
-    st, data = req("POST", "/api/auth/register", {"username": "test_admin_x", "password": "abc12345", "role": "admin"})
-    check("不允许自助注册管理员", st == 400)
+    st, _ = req("POST", "/api/auth/register", {"username": "test_admin_x", "password": "abc12345", "role": "admin"})
+    check("注册管理员", st == 200)
 
     section("登录 / 身份校验")
     st, tok_c = req("POST", "/api/auth/login", {"username": "alice", "password": "123456", "role": "customer"})
@@ -236,6 +236,28 @@ def main() -> int:
     check("顾客不能访问看板（403）", st == 403)
     st, users = req("GET", "/api/admin/users", token=TOKEN_A)
     check("管理员用户列表", st == 200 and len(users) >= 6)
+    check("用户列表含密码哈希（PBKDF2）",
+          all(u.get("password_hash", "").startswith("pbkdf2:sha256") for u in users))
+
+    section("管理员用户管理（重置密码）")
+    # 找到 alice 的 user_id，重置其密码再改回
+    alice = next(u for u in users if u["username"] == "alice")
+    st, _ = req("PUT", f"/api/admin/users/{alice['user_id']}/reset-password",
+                {"new_password": "temp654321"}, TOKEN_A)
+    check("管理员重置用户密码", st == 200)
+    st, _ = req("POST", "/api/auth/login", {"username": "alice", "password": "temp654321"})
+    check("新密码可登录", st == 200)
+    st, _ = req("PUT", f"/api/admin/users/{alice['user_id']}/reset-password",
+                {"new_password": "123456"}, TOKEN_A)
+    check("重置回演示密码", st == 200)
+    st, _ = req("POST", "/api/auth/login", {"username": "alice", "password": "123456"})
+    check("alice 恢复原密码", st == 200)
+    st, _ = req("PUT", f"/api/admin/users/{alice['user_id']}/reset-password",
+                {"new_password": "123"}, TOKEN_C)
+    check("顾客不能重置他人密码（403）", st == 403)
+    st, _ = req("PUT", "/api/admin/users/99999/reset-password",
+                {"new_password": "abcdef123"}, TOKEN_A)
+    check("重置不存在的用户（404）", st == 404)
 
     section("未登录拦截")
     st, _ = req("GET", "/api/orders")

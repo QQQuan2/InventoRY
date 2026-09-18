@@ -27,7 +27,7 @@ python app.py         # 启动服务
   - **商家端**：菜品管理 + **实拍图上传**（无图时自动用 emoji 占位展示）+ 评价回复
   - **管理员可视化看板**：近 7 天订单/营收走势、订单状态分布、商家营收排行、用户管理
 - **数据模型**：8 张业务表（Users / Merchants / Dishes / Orders / Order_Details / Deliveries / Comments / Addresses）
-- **质量保障**：`python tests/smoke_test.py` —— **70 项接口冒烟测试全覆盖**
+- **质量保障**：`python tests/smoke_test.py` —— **77 项接口冒烟测试全覆盖**
 - 详细文档 👉 [waimai-delivery-system/README.md](waimai-delivery-system/README.md)
 
 ### 2. CSV 数据可视化仪表盘 · [csv-dashboard/](csv-dashboard/index.html)
