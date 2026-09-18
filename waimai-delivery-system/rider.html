@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>骑手端 · 校园外卖配送系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div id="topbar"></div>
+  <div class="container">
+    <div id="statCards" class="stats-grid"></div>
+
+    <div class="tabs" id="mainTabs">
+      <button class="tab-btn active" data-tab="tabHall">🛵 抢单大厅</button>
+      <button class="tab-btn" data-tab="tabActive">🚴 配送中</button>
+      <button class="tab-btn" data-tab="tabHistory">📦 历史配送</button>
+    </div>
+
+    <div id="tabHall" class="tab-panel"><div id="hallList"></div></div>
+    <div id="tabActive" class="tab-panel" style="display:none"><div id="activeList"></div></div>
+    <div id="tabHistory" class="tab-panel" style="display:none"><div id="historyList"></div></div>
+  </div>
+
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/rider.js"></script>
+</body>
+</html>

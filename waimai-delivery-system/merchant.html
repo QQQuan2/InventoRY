@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>商家端 · 校园外卖配送系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    .dish-manage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+    .dish-manage-card { display: flex; gap: 12px; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .dish-manage-card .ops { display: flex; flex-direction: column; gap: 6px; }
+    .comment-item { border-bottom: 1px solid var(--border); padding: 12px 0; }
+    .comment-item:last-child { border-bottom: none; }
+    .reply-box { display: flex; gap: 8px; margin-top: 8px; }
+    .reply-box input { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; }
+    .reject-mask textarea { width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+  <div class="container">
+    <div id="statCards" class="stats-grid"></div>
+
+    <div class="tabs" id="mainTabs">
+      <button class="tab-btn active" data-tab="tabOrders">🧾 订单管理</button>
+      <button class="tab-btn" data-tab="tabDishes">🍜 菜品管理</button>
+      <button class="tab-btn" data-tab="tabComments">⭐ 评价管理</button>
+    </div>
+
+    <!-- 订单管理 -->
+    <div id="tabOrders" class="tab-panel">
+      <div class="tabs" id="orderScopeTabs" style="margin-bottom:10px">
+        <button class="tab-btn active" data-scope="active" style="padding:5px 14px">进行中</button>
+        <button class="tab-btn" data-scope="all" style="padding:5px 14px">全部</button>
+      </div>
+      <div id="orderList"></div>
+    </div>
+
+    <!-- 菜品管理 -->
+    <div id="tabDishes" class="tab-panel" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3>我的菜品</h3>
+        <button class="btn" onclick="openDishModal()">＋ 新增菜品</button>
+      </div>
+      <div class="muted" style="margin-bottom:12px">💡 上传实拍图更吸引顾客；没有图片的菜品会自动用 emoji 展示。</div>
+      <div id="dishList" class="dish-manage-grid"></div>
+    </div>
+
+    <!-- 评价管理 -->
+    <div id="tabComments" class="tab-panel" style="display:none">
+      <div id="commentList" class="card"></div>
+    </div>
+  </div>
+
+  <!-- 菜品编辑弹窗 -->
+  <div class="modal-mask" id="dishModal">
+    <div class="modal">
+      <h3 id="dishModalTitle">新增菜品</h3>
+      <input type="hidden" id="dmDishId" />
+      <div class="field"><label>菜品名称 *</label><input id="dmName" placeholder="例如：招牌炸酱面" /></div>
+      <div class="form-row">
+        <div class="field"><label>价格（元）*</label><input id="dmPrice" type="number" step="0.1" min="0.1" /></div>
+        <div class="field"><label>库存</label><input id="dmStock" type="number" min="0" value="50" /></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>分类</label>
+          <select id="dmCategory">
+            <option>主食</option><option>小吃</option><option>饮品</option>
+            <option>甜品</option><option>套餐</option><option>其他</option>
+          </select>
+        </div>
+        <div class="field"><label>Emoji 占位图</label>
+          <select id="dmEmoji">
+            <option>🍽️</option><option>🍜</option><option>🍚</option><option>🍛</option>
+            <option>🥟</option><option>🍔</option><option>🍕</option><option>🧋</option>
+            <option>🥤</option><option>🥛</option><option>🍰</option><option>🍨</option>
+            <option>🥗</option><option>🥒</option><option>🍗</option><option>🦆</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal('dishModal')">取消</button>
+        <button class="btn" id="btnSaveDish">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 拒单弹窗 -->
+  <div class="modal-mask" id="rejectModal">
+    <div class="modal">
+      <h3>拒单 <span class="muted" id="rejectOrderId"></span></h3>
+      <div class="field"><label>拒单原因（会展示给顾客）</label>
+        <textarea id="rejectReason" rows="3" placeholder="例如：高峰期运力不足">高峰期运力不足，抱歉</textarea></div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal('rejectModal')">再想想</button>
+        <button class="btn danger" id="btnConfirmReject">确认拒单</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/merchant.js"></script>
+</body>
+</html>

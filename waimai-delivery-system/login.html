@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 · 校园外卖配送系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { display: flex; min-height: 100vh; }
+    /* 左侧品牌区 */
+    .brand-pane {
+      flex: 1; display: flex; flex-direction: column; justify-content: center;
+      padding: 48px; color: #fff;
+      background: linear-gradient(135deg, #ff7a1a 0%, #ff9f43 55%, #ffb75e 100%);
+    }
+    .brand-pane h1 { font-size: 34px; margin-bottom: 14px; }
+    .brand-pane p.sub { font-size: 15px; opacity: .92; line-height: 1.9; max-width: 460px; }
+    .flow-demo { margin-top: 34px; display: grid; gap: 10px; max-width: 430px; }
+    .flow-item {
+      background: rgba(255,255,255,.16); border-radius: 12px; padding: 12px 16px;
+      display: flex; align-items: center; gap: 12px; font-size: 14px; backdrop-filter: blur(4px);
+    }
+    .flow-item .ico { font-size: 22px; }
+    /* 右侧表单区 */
+    .form-pane { flex: 1; display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+    .auth-card { width: 100%; max-width: 430px; }
+    .role-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+    .role-card {
+      border: 2px solid var(--border); border-radius: 12px; padding: 12px 4px;
+      text-align: center; cursor: pointer; transition: all .15s; background: #fff;
+    }
+    .role-card .ico { font-size: 26px; }
+    .role-card .name { font-size: 13px; margin-top: 4px; color: var(--text-sub); }
+    .role-card.active { border-color: var(--primary); background: var(--primary-light); }
+    .role-card.active .name { color: var(--primary-dark); font-weight: 700; }
+    .demo-accounts { margin-top: 18px; font-size: 12px; color: var(--text-sub); line-height: 2; }
+    .demo-accounts code {
+      background: #f3f4f6; border-radius: 6px; padding: 1px 8px; cursor: pointer; margin: 0 2px;
+    }
+    .demo-accounts code:hover { background: var(--primary-light); color: var(--primary-dark); }
+    .switch-line { text-align: center; font-size: 13px; color: var(--text-sub); margin-top: 14px; }
+    .switch-line a { font-weight: 600; cursor: pointer; }
+    @media (max-width: 760px) { .brand-pane { display: none; } }
+  </style>
+</head>
+<body>
+  <!-- 左侧：系统介绍 -->
+  <div class="brand-pane">
+    <h1>🍔 校园外卖配送系统</h1>
+    <p class="sub">一个四角色联动的完整外卖业务闭环：顾客下单、商家接单、骑手配送、管理员统筹。
+       《管理信息系统》课程作品 · Flask + SQLite/MySQL。</p>
+    <div class="flow-demo">
+      <div class="flow-item"><span class="ico">🛍️</span>顾客浏览商家菜单，加购下单</div>
+      <div class="flow-item"><span class="ico">🏪</span>商家确认接单，拒单自动退款退库存</div>
+      <div class="flow-item"><span class="ico">🛵</span>骑手在抢单大厅接单，送达一键标记</div>
+      <div class="flow-item"><span class="ico">⭐</span>顾客评价打分，商家回复，管理员看板监控全局</div>
+    </div>
+  </div>
+
+  <!-- 右侧：登录 / 注册 / 找回密码 -->
+  <div class="form-pane">
+    <div class="auth-card card">
+      <!-- 身份选择 -->
+      <div class="role-grid" id="roleGrid">
+        <div class="role-card active" data-role="customer"><div class="ico">🛍️</div><div class="name">用户</div></div>
+        <div class="role-card" data-role="merchant"><div class="ico">🏪</div><div class="name">商家</div></div>
+        <div class="role-card" data-role="rider"><div class="ico">🛵</div><div class="name">骑手</div></div>
+        <div class="role-card" data-role="admin"><div class="ico">🛡️</div><div class="name">管理员</div></div>
+      </div>
+
+      <!-- 登录 -->
+      <div id="paneLogin">
+        <div class="field"><label>用户名</label><input id="liUsername" placeholder="请输入用户名" /></div>
+        <div class="field"><label>密码</label><input id="liPassword" type="password" placeholder="请输入密码" /></div>
+        <button class="btn" style="width:100%;padding:12px" id="btnLogin">以「用户」身份登录</button>
+        <div class="switch-line">没有账号？<a onclick="switchPane('register')">立即注册</a>
+          &nbsp;·&nbsp; <a onclick="switchPane('forgot')">忘记密码？</a></div>
+        <div class="demo-accounts">
+          演示账号（密码都是 <b>123456</b>，点击填入）：<br />
+          用户 <code data-u="alice">alice</code> ｜
+          商家 <code data-u="shop_zha">shop_zha</code> ｜
+          骑手 <code data-u="bob">bob</code> ｜
+          管理员 <code data-u="admin">admin</code>
+        </div>
+      </div>
+
+      <!-- 注册 -->
+      <div id="paneRegister" style="display:none">
+        <div class="field"><label>用户名</label><input id="rgUsername" placeholder="2-20 位字母 / 数字 / 中文" /></div>
+        <div class="field"><label>密码（至少 6 位）</label><input id="rgPassword" type="password" /></div>
+        <div class="field"><label>手机号（选填）</label><input id="rgPhone" /></div>
+        <div class="field" id="rgMerchantNameField" style="display:none">
+          <label>店铺名称</label><input id="rgMerchantName" placeholder="例如：川香居" />
+        </div>
+        <button class="btn" style="width:100%;padding:12px" id="btnRegister">注册</button>
+        <div class="switch-line">已有账号？<a onclick="switchPane('login')">去登录</a></div>
+      </div>
+
+      <!-- 找回密码 -->
+      <div id="paneForgot" style="display:none">
+        <div class="field"><label>第一步：输入用户名获取验证码</label>
+          <div style="display:flex;gap:10px">
+            <input id="fpUsername" placeholder="注册时的用户名" style="flex:1" />
+            <button class="btn ghost" id="btnSendCode">获取验证码</button>
+          </div>
+        </div>
+        <div id="fpCodeTip" class="muted" style="display:none;margin:-6px 0 14px;color:var(--primary-dark)"></div>
+        <div class="field"><label>第二步：输入验证码</label><input id="fpCode" placeholder="6 位数字验证码" /></div>
+        <div class="field"><label>设置新密码（至少 6 位）</label><input id="fpNewPassword" type="password" /></div>
+        <button class="btn" style="width:100%;padding:12px" id="btnReset">重置密码</button>
+        <div class="switch-line">想起来密码了？<a onclick="switchPane('login')">去登录</a></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/login.js"></script>
+</body>
+</html>

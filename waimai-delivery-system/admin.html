@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理员后台 · 校园外卖配送系统</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .chart-box { background: #fff; border-radius: 14px; box-shadow: var(--shadow); padding: 18px; }
+    .chart-box h3 { font-size: 15px; margin-bottom: 10px; }
+    .chart-wrap { position: relative; height: 260px; }
+    @media (max-width: 860px) { .chart-grid { grid-template-columns: 1fr; } }
+    .rank-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--border); }
+    .rank-row:last-child { border-bottom: none; }
+    .rank-idx { width: 22px; height: 22px; border-radius: 6px; background: var(--primary-light); color: var(--primary-dark);
+                font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div id="topbar"></div>
+  <div class="container">
+    <div id="statCards" class="stats-grid"></div>
+
+    <div class="chart-grid">
+      <div class="chart-box" style="grid-column: 1 / -1;">
+        <h3>📈 近 7 天订单量与营收</h3>
+        <div class="chart-wrap"><canvas id="chartWeekly"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <h3>🍩 订单状态分布</h3>
+        <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <h3>🏪 商家营收排行</h3>
+        <div class="chart-wrap"><canvas id="chartMerchant"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <h3>🔥 菜品销量 Top 5</h3>
+        <div id="topDishes"></div>
+      </div>
+      <div class="chart-box">
+        <h3>👥 用户角色分布</h3>
+        <div class="chart-wrap"><canvas id="chartRoles"></canvas></div>
+      </div>
+    </div>
+
+    <div class="tabs" id="dataTabs">
+      <button class="tab-btn active" data-tab="tabOrders">🧾 全部订单</button>
+      <button class="tab-btn" data-tab="tabUsers">👥 用户列表</button>
+    </div>
+    <div id="tabOrders" class="tab-panel"><div class="card" id="allOrders"></div></div>
+    <div id="tabUsers" class="tab-panel" style="display:none"><div class="card" id="userTable"></div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/static/js/common.js"></script>
+  <script src="/static/js/admin.js"></script>
+</body>
+</html>
