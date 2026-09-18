@@ -1,0 +1,205 @@
+/* ============================================================
+   CSV 数据可视化仪表盘 — 样式表
+   设计：简洁商务风；通过 CSS 变量实现深浅色主题；媒体查询实现响应式
+   ============================================================ */
+
+/* ---------- 主题变量（浅色为默认） ---------- */
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #f0f3f7;
+  --text: #1f2933;
+  --text-muted: #6b7280;
+  --border: #e3e8ef;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --shadow: 0 1px 3px rgba(16, 24, 40, .08), 0 1px 2px rgba(16, 24, 40, .06);
+  --radius: 10px;
+}
+
+/* 深色主题：在 <html data-theme="dark"> 时生效 */
+[data-theme="dark"] {
+  --bg: #0f1419;
+  --surface: #1a2027;
+  --surface-2: #222b35;
+  --text: #e6edf3;
+  --text-muted: #9aa6b2;
+  --border: #2c3742;
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+}
+
+/* ---------- 基础重置 ---------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  transition: background .2s ease, color .2s ease;
+}
+
+h1, h2 { margin: 0; font-weight: 600; }
+
+/* ---------- 顶部栏 ---------- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-header__title h1 { font-size: 20px; }
+.app-header__subtitle { margin: 2px 0 0; color: var(--text-muted); font-size: 13px; }
+.app-header__actions { display: flex; align-items: center; gap: 10px; }
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.btn:hover { border-color: var(--primary); }
+.btn--primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn--primary:hover { background: var(--primary-hover); }
+.btn--icon { padding: 8px 10px; font-size: 16px; }
+
+/* ---------- 容器与区块 ---------- */
+.container { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+.section { margin-top: 24px; }
+
+/* ---------- 空状态 ---------- */
+.empty-state { display: flex; justify-content: center; padding: 48px 16px; }
+.empty-state__card {
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 32px;
+  max-width: 420px;
+  width: 100%;
+}
+.empty-state__icon { font-size: 48px; }
+.empty-state__card p { color: var(--text-muted); margin: 12px 0 20px; }
+.drop-zone {
+  margin-top: 20px;
+  padding: 24px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 13px;
+  transition: border-color .15s ease, background .15s ease;
+}
+.drop-zone--active { border-color: var(--primary); background: var(--surface-2); }
+
+/* ---------- 面板（卡片容器） ---------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.panel__head h2 { font-size: 16px; }
+
+/* ---------- 统计卡片 ---------- */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.stat-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.stat-card__label { color: var(--text-muted); font-size: 13px; }
+.stat-card__value { font-size: 22px; font-weight: 600; margin-top: 4px; }
+
+/* ---------- 表单控件 ---------- */
+.field { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
+.field select,
+.input {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+}
+.input:focus, .field select:focus { outline: none; border-color: var(--primary); }
+.input--sm { padding: 5px 8px; font-size: 13px; width: 100%; min-width: 90px; }
+.chart-controls { display: flex; flex-wrap: wrap; gap: 12px; }
+.table-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* ---------- 图表 ---------- */
+.chart-wrap { position: relative; height: 360px; }
+.hint { color: var(--text-muted); font-size: 12px; margin: 10px 0 0; }
+
+/* ---------- 表格 ---------- */
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th, .data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+.data-table thead .head-row th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  cursor: pointer;
+  user-select: none;
+}
+.data-table thead .head-row th:hover { color: var(--primary); }
+.data-table .filter-row th { background: var(--surface); cursor: default; }
+.data-table tbody tr:hover { background: var(--surface-2); }
+.th-arrow { color: var(--primary); font-size: 11px; }
+
+/* ---------- 页脚 ---------- */
+.app-footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 640px) {
+  .app-header { padding: 12px 16px; }
+  .app-header__title h1 { font-size: 17px; }
+  .panel__head { align-items: flex-start; }
+  .chart-wrap { height: 300px; }
+  .container { padding: 16px 12px 40px; }
+}
