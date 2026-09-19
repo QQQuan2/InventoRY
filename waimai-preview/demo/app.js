@@ -1,5 +1,6 @@
 /* 外卖配送系统 · 在线试运行
  * 纯前端演示版：业务流程与状态流转与 Flask 后端版保持一致，数据存 localStorage。
+ * 登录 / 注册 / 找回密码与后端版行为一致（身份绑定账号，登录后才能进入对应视图）。
  * 订单状态：pending_accept（待商家接单）→ accepted（商家已接单，待骑手抢单）
  *         → delivering（骑手配送中）→ delivered（已送达）→ completed（顾客已评价）
  *         前置阶段可 → cancelled
@@ -7,7 +8,7 @@
 (function () {
   'use strict';
 
-  var STORE_KEY = 'waimai_demo_v1';
+  var STORE_KEY = 'waimai_demo_v2';
 
   /* ---------------- 示例数据（与 init_db.py / schema_sqlite.sql 对应） ---------------- */
 
@@ -65,6 +66,19 @@
       rider: '', createdAt: now - 35 * 60 * 1000, acceptedAt: now - 25 * 60 * 1000
     });
     return {
+      // 密码为演示用明文，仅存于浏览器本地；真实后端使用 PBKDF2 哈希存储
+      users: [
+        { id: 1, username: 'alice', password: '123456', role: 'customer', phone: '13800000001' },
+        { id: 2, username: 'xiaomei', password: '123456', role: 'customer', phone: '13800000002' },
+        { id: 3, username: 'qiang', password: '123456', role: 'customer', phone: '13800000003' },
+        { id: 4, username: 'lina', password: '123456', role: 'customer', phone: '13800000004' },
+        { id: 5, username: 'shop_zha', password: '123456', role: 'merchant', phone: '010-12345678' },
+        { id: 6, username: 'shop_hu', password: '123456', role: 'merchant', phone: '021-12345678' },
+        { id: 7, username: 'shop_guang', password: '123456', role: 'merchant', phone: '020-12345678' },
+        { id: 8, username: 'bob', password: '123456', role: 'rider', phone: '13900000001' },
+        { id: 9, username: 'zhou', password: '123456', role: 'rider', phone: '13900000002' },
+        { id: 10, username: 'admin', password: '123456', role: 'admin', phone: '' }
+      ],
       merchants: [
         { id: 1, name: '老北京炸酱面馆', phone: '010-12345678', address: '北京市朝阳区美食街 1 号', rating: 4.7, owner: 'shop_zha' },
         { id: 2, name: '沪上阿姨奶茶', phone: '021-12345678', address: '上海市浦东新区大学城 8 号', rating: 4.5, owner: 'shop_hu' },
@@ -81,11 +95,13 @@
         { id: 8, merchantId: 3, name: '冻柠茶', price: 12.0, stock: 80, category: '饮品', emoji: '🍋', onShelf: true }
       ],
       addresses: [
-        { id: 1, label: '家', detail: '北京市朝阳区幸福小区 3 号楼 201', isDefault: true },
-        { id: 2, label: '学校', detail: '北京市海淀区学院路 15 号学生公寓 6 栋 502', isDefault: false }
+        { id: 1, userId: 1, label: '家', detail: '北京市朝阳区幸福小区 3 号楼 201', isDefault: true },
+        { id: 2, userId: 1, label: '学校', detail: '北京市海淀区学院路 15 号学生公寓 6 栋 502', isDefault: false }
       ],
       orders: orders,
-      seq: { order: 11, addr: 3 }
+      session: null,          // 当前登录用户名（未登录为 null）
+      resetCode: null,        // 找回密码验证码 { username, code }
+      seq: { order: 11, addr: 3, user: 11, merchant: 4, dish: 9 }
     };
   }
 
@@ -97,11 +113,20 @@
       var raw = localStorage.getItem(STORE_KEY);
       db = raw ? JSON.parse(raw) : seedData();
     } catch (e) { db = seedData(); }
+    // 兼容旧版本数据（v1 没有用户体系）
+    if (!db.users) { db = seedData(); }
+    if (db.session && !findUser(db.session)) db.session = null;
     save();
   }
   function save() { localStorage.setItem(STORE_KEY, JSON.stringify(db)); }
   function reset() { db = seedData(); save(); render(); }
   function findMerchant(id) { return db.merchants.filter(function (m) { return m.id === id; })[0]; }
+  function findUser(name) { return db.users.filter(function (u) { return u.username === name; })[0]; }
+  function cur() { return db.session ? findUser(db.session) : null; }
+  function myAddresses() {
+    var u = cur();
+    return u ? db.addresses.filter(function (a) { return a.userId === u.id; }) : [];
+  }
 
   /* ---------------- 状态与工具 ---------------- */
 
@@ -109,6 +134,10 @@
     pending_accept: '待商家接单', accepted: '待骑手抢单', delivering: '骑手配送中',
     delivered: '已送达', completed: '已完成', cancelled: '已取消'
   };
+  var ROLE_TEXT = { customer: '用户', merchant: '商家', rider: '骑手', admin: '管理员' };
+  var loginRole = 'customer'; // 登录页当前选中的身份
+  var state = { customerTab: 'order', merchantTab: 'pending', riderTab: 'hall', currentMerchant: null, cart: {} };
+
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -131,13 +160,10 @@
     setTimeout(function () { el.remove(); }, 2200);
   }
 
-  /* ---------------- 应用状态 ---------------- */
-
-  var state = { role: 'customer', customerTab: 'order', merchantTab: 'pending', riderTab: 'hall', currentMerchant: null, cart: {} };
-
   /* ---------------- 业务动作 ---------------- */
 
   function placeOrder(f) {
+    var u = cur();
     var items = [];
     var total = 0;
     Object.keys(state.cart).forEach(function (did) {
@@ -149,14 +175,14 @@
       total += d.price * qty;
     });
     if (!items.length) { toast('购物车是空的'); throw new Error('empty'); }
-    var addr = db.addresses.filter(function (a) { return a.id === +f.address.value; })[0];
+    var addr = myAddresses().filter(function (a) { return a.id === +f.address.value; })[0];
     items.forEach(function (it) {
       var d = db.dishes.filter(function (x) { return x.name === it.name; })[0];
       if (d) d.stock -= it.qty;
     });
     db.orders.push({
       id: db.seq.order++,
-      userName: 'alice',
+      userName: u.username,
       merchantId: state.currentMerchant,
       items: items,
       total: total,
@@ -198,9 +224,10 @@
   }
 
   function claimOrder(id) {
+    var u = cur();
     var o = db.orders.filter(function (x) { return x.id === id; })[0];
     if (o.status !== 'accepted') { toast('该订单已被抢'); render(); return; }
-    o.status = 'delivering'; o.rider = 'bob'; o.claimedAt = Date.now();
+    o.status = 'delivering'; o.rider = u.username; o.claimedAt = Date.now();
     save(); toast('抢单成功');
   }
   function deliverOrder(id) {
@@ -228,14 +255,17 @@
   }
 
   function addAddress(f) {
+    var u = cur();
     var detail = f.detail.value.trim();
     if (!detail) { toast('请填写地址'); return; }
-    var isDefault = db.addresses.length === 0;
-    db.addresses.push({ id: db.seq.addr++, label: f.label.value.trim() || '新地址', detail: detail, isDefault: isDefault });
+    var mine = myAddresses();
+    var isDefault = mine.length === 0;
+    db.addresses.push({ id: db.seq.addr++, userId: u.id, label: f.label.value.trim() || '新地址', detail: detail, isDefault: isDefault });
     save(); toast('地址已添加');
   }
   function setDefaultAddr(id) {
-    db.addresses.forEach(function (a) { a.isDefault = (a.id === id); });
+    var u = cur();
+    db.addresses.forEach(function (a) { a.isDefault = (a.userId === u.id && a.id === id); });
     save(); toast('已设为默认地址');
   }
   function delAddress(id) {
@@ -246,20 +276,99 @@
   /* ---------------- 渲染 ---------------- */
 
   var app = document.getElementById('app');
+  var userBox = document.getElementById('userBox');
 
   function render() {
-    document.querySelectorAll('.role-btn').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.role === state.role);
-    });
-    if (state.role === 'customer') renderCustomer();
-    else if (state.role === 'merchant') renderMerchant();
-    else if (state.role === 'rider') renderRider();
+    var u = cur();
+    // 顶栏：显示当前登录用户或空
+    if (u) {
+      userBox.innerHTML = '<span class="user-chip">' + esc(u.username) + ' · ' + ROLE_TEXT[u.role] + '</span>' +
+        '<button class="link-btn" id="logoutBtn">退出登录</button>';
+      document.getElementById('logoutBtn').addEventListener('click', function () {
+        db.session = null; state.cart = {}; state.currentMerchant = null; save(); render();
+        toast('已退出登录');
+      });
+    } else {
+      userBox.innerHTML = '';
+    }
+    if (!u) { renderLogin(); return; }
+    if (u.role === 'customer') renderCustomer();
+    else if (u.role === 'merchant') renderMerchant();
+    else if (u.role === 'rider') renderRider();
     else renderAdmin();
+  }
+
+  /* ---------- 登录 / 注册 / 找回密码 ---------- */
+
+  function renderLogin() {
+    var roles = [
+      { k: 'customer', ico: '🛍️', name: '用户' },
+      { k: 'merchant', ico: '🏪', name: '商家' },
+      { k: 'rider', ico: '🛵', name: '骑手' },
+      { k: 'admin', ico: '🛡️', name: '管理员' }
+    ];
+    var h = '<div class="auth-wrap"><div class="auth-card card">';
+    h += '<div class="role-grid">' +
+      roles.map(function (r) {
+        return '<div class="role-card' + (r.k === loginRole ? ' active' : '') + '" data-role="' + r.k + '" onclick="App.pickRole(\'' + r.k + '\')">' +
+          '<div class="ico">' + r.ico + '</div><div class="name">' + r.name + '</div></div>';
+      }).join('') + '</div>';
+
+    // 登录
+    h += '<div id="paneLogin">' +
+      '<form onsubmit="return App.doLogin(this)">' +
+      '<div class="field"><label>用户名</label><input type="text" name="username" placeholder="请输入用户名" required></div>' +
+      '<div class="field"><label>密码</label><input type="password" name="password" placeholder="请输入密码" required></div>' +
+      '<button class="btn" style="width:100%;padding:12px" type="submit" id="loginBtn">以「' + ROLE_TEXT[loginRole] + '」身份登录</button>' +
+      '</form>' +
+      '<div class="switch-line">没有账号？<a onclick="App.switchPane(\'register\')">立即注册</a>' +
+      ' &nbsp;·&nbsp; <a onclick="App.switchPane(\'forgot\')">忘记密码？</a></div>' +
+      '<div class="demo-accounts">演示账号（密码都是 <b>123456</b>，点击填入）：<br>' +
+      '用户 <code data-u="alice" data-r="customer" onclick="App.fillDemoAccount(\'alice\')">alice</code> ｜ ' +
+      '商家 <code data-u="shop_zha" data-r="merchant" onclick="App.fillDemoAccount(\'shop_zha\')">shop_zha</code> ｜ ' +
+      '骑手 <code data-u="bob" data-r="rider" onclick="App.fillDemoAccount(\'bob\')">bob</code> ｜ ' +
+      '管理员 <code data-u="admin" data-r="admin" onclick="App.fillDemoAccount(\'admin\')">admin</code></div></div>';
+
+    // 注册
+    h += '<div id="paneRegister" style="display:none">' +
+      '<form onsubmit="return App.doRegister(this)">' +
+      '<div class="field"><label>用户名</label><input type="text" name="username" placeholder="2-20 位字母 / 数字 / 中文" required></div>' +
+      '<div class="field"><label>密码（至少 6 位）</label><input type="password" name="password" required></div>' +
+      '<div class="field"><label>手机号（选填）</label><input type="text" name="phone"></div>' +
+      '<div class="field" id="rgMerchantNameField" style="' + (loginRole === 'merchant' ? '' : 'display:none') + '">' +
+      '<label>店铺名称</label><input type="text" name="merchantName" placeholder="例如：川香居"></div>' +
+      '<button class="btn" style="width:100%;padding:12px" type="submit">注册</button>' +
+      '</form>' +
+      '<div class="switch-line">已有账号？<a onclick="App.switchPane(\'login\')">去登录</a></div></div>';
+
+    // 找回密码
+    h += '<div id="paneForgot" style="display:none">' +
+      '<div class="field"><label>第一步：输入用户名获取验证码</label>' +
+      '<div class="row"><input type="text" id="fpUsername" placeholder="注册时的用户名" style="flex:1">' +
+      '<button type="button" class="btn ghost" onclick="App.sendCode()">获取验证码</button></div></div>' +
+      '<div id="fpCodeTip" class="code-tip" style="display:none"></div>' +
+      '<form onsubmit="return App.doReset(this)">' +
+      '<div class="field"><label>第二步：输入验证码</label><input type="text" name="code" placeholder="6 位数字验证码" required></div>' +
+      '<div class="field"><label>设置新密码（至少 6 位）</label><input type="password" name="newPassword" required></div>' +
+      '<button class="btn" style="width:100%;padding:12px" type="submit">重置密码</button>' +
+      '</form>' +
+      '<div class="switch-line">想起来密码了？<a onclick="App.switchPane(\'login\')">去登录</a></div></div>';
+
+    h += '</div></div>';
+    app.innerHTML = h;
+  }
+
+  function switchPane(name) {
+    ['Login', 'Register', 'Forgot'].forEach(function (p) {
+      var el = document.getElementById('pane' + p);
+      if (el) el.style.display = p.toLowerCase() === name ? 'block' : 'none';
+    });
   }
 
   /* ---------- 顾客端 ---------- */
 
   function renderCustomer() {
+    var u = cur();
     var h = '';
     h += '<div class="tabs">' +
       tabBtn('order', '点餐', state.customerTab) +
@@ -301,12 +410,14 @@
       }
     } else if (state.customerTab === 'orders') {
       h += '<h2 class="sec">我的订单</h2>';
-      var mine = db.orders.filter(function (o) { return o.userName === 'alice'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+      var mine = db.orders.filter(function (o) { return o.userName === u.username; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
       if (!mine.length) h += '<div class="empty">还没有订单</div>';
       mine.forEach(function (o) { h += orderCard(o, 'customer'); });
     } else {
       h += '<h2 class="sec">我的地址</h2><div class="card">';
-      db.addresses.forEach(function (a) {
+      var addrs = myAddresses();
+      if (!addrs.length) h += '<div class="muted" style="padding:8px 0">还没有地址，下单前请先添加收货地址。</div>';
+      addrs.forEach(function (a) {
         h += '<div class="row spread" style="padding:8px 0;border-bottom:1px solid #f3f4f6">' +
           '<span><span class="tag">' + esc(a.label) + '</span> ' + esc(a.detail) +
           (a.isDefault ? ' <span class="st delivered" style="margin-left:6px">默认</span>' : '') + '</span>' +
@@ -344,7 +455,7 @@
   }
 
   function openCheckout() {
-    var addrOpts = db.addresses.map(function (a) {
+    var addrOpts = myAddresses().map(function (a) {
       return '<option value="' + a.id + '"' + (a.isDefault ? ' selected' : '') + '>' + esc(a.label + ' · ' + a.detail) + '</option>';
     }).join('');
     var html =
@@ -362,7 +473,9 @@
   /* ---------- 商家端 ---------- */
 
   function renderMerchant() {
-    var me = db.merchants.filter(function (m) { return m.owner === 'shop_zha'; })[0];
+    var u = cur();
+    var me = db.merchants.filter(function (m) { return m.owner === u.username; })[0];
+    if (!me) { app.innerHTML = '<div class="empty">未找到你的店铺信息</div>'; return; }
     var h = '<div class="card row spread"><span>当前商家：<b>' + esc(me.name) + '</b> <span class="muted">' + esc(me.address) + '</span></span>' +
       '<span class="tag">评分 ' + me.rating + '</span></div>';
     h += '<div class="tabs">' +
@@ -387,7 +500,16 @@
       active.forEach(function (o) { h += orderCard(o, 'merchant'); });
     } else if (state.merchantTab === 'dishes') {
       h += '<h2 class="sec">菜品管理</h2>';
-      db.dishes.filter(function (d) { return d.merchantId === me.id; }).forEach(function (d) {
+      h += '<form class="card" onsubmit="return App.addDish(this)" style="margin-bottom:14px"><div class="field" style="margin-bottom:0"><label>新增菜品</label>' +
+        '<div class="row"><input type="text" name="name" placeholder="菜品名" style="flex:1;min-width:120px" required>' +
+        '<input type="text" name="price" placeholder="价格" style="max-width:90px" required>' +
+        '<input type="text" name="stock" placeholder="库存" style="max-width:80px" required>' +
+        '<select name="category" style="max-width:90px">' + ['主食', '小吃', '饮品', '甜品'].map(function (c) { return '<option>' + c + '</option>'; }).join('') + '</select>' +
+        '<select name="emoji" style="max-width:80px">' + ['🍜', '🥗', '🥛', '🧋', '🍛', '🍖', '🍋', '🥟'].map(function (e) { return '<option>' + e + '</option>'; }).join('') + '</select>' +
+        '<button class="btn small" type="submit">添加</button></div></div></form>';
+      var dishes = db.dishes.filter(function (d) { return d.merchantId === me.id; });
+      if (!dishes.length) h += '<div class="empty">还没有菜品，先添加一道吧。</div>';
+      dishes.forEach(function (d) {
         h += '<div class="card row spread"><span style="font-size:26px">' + d.emoji + '</span>' +
           '<span style="flex:1"><b>' + esc(d.name) + '</b> <span class="tag">' + esc(d.category) + '</span><br>' +
           '<span class="price" style="color:#ff6b1a">¥' + fmtMoney(d.price) + '</span> <span class="muted">库存 ' + d.stock + '</span></span>' +
@@ -414,17 +536,18 @@
   /* ---------- 骑手端 ---------- */
 
   function renderRider() {
+    var u = cur();
     var h = '<div class="stat-grid">' +
       statCard(riderEarnings(), '累计收入（元）') +
-      statCard(db.orders.filter(function (o) { return o.rider === 'bob'; }).length, '累计配送') +
-      statCard(db.orders.filter(function (o) { return o.rider === 'bob' && o.status === 'delivering'; }).length, '配送中') +
+      statCard(db.orders.filter(function (o) { return o.rider === u.username; }).length, '累计配送') +
+      statCard(db.orders.filter(function (o) { return o.rider === u.username && o.status === 'delivering'; }).length, '配送中') +
       '</div>';
     h += '<div class="tabs">' +
       tabBtn('hall', '抢单大厅', state.riderTab) +
       tabBtn('doing', '配送中', state.riderTab) +
       tabBtn('history', '历史配送', state.riderTab) +
       '</div>';
-    var mine = db.orders.filter(function (o) { return o.rider === 'bob'; });
+    var mine = db.orders.filter(function (o) { return o.rider === u.username; });
     if (state.riderTab === 'hall') {
       var hall = db.orders.filter(function (o) { return o.status === 'accepted'; })
         .sort(function (a, b) { return b.createdAt - a.createdAt; });
@@ -449,10 +572,11 @@
   }
 
   function riderEarnings() {
+    var u = cur();
     // 演示口径：每单配送费按订单金额 10% 估算
     var sum = 0;
     db.orders.forEach(function (o) {
-      if (o.rider === 'bob' && (o.status === 'delivered' || o.status === 'completed')) sum += o.total * 0.1;
+      if (o.rider === u.username && (o.status === 'delivered' || o.status === 'completed')) sum += o.total * 0.1;
     });
     return fmtMoney(sum);
   }
@@ -470,8 +594,8 @@
     var h = '<h2 class="sec">数据看板</h2>';
     h += '<div class="stat-grid">' +
       statCard(db.merchants.length, '入驻商家') +
-      statCard(3 + 4, '注册用户') +
-      statCard(2, '注册骑手') +
+      statCard(db.users.filter(function (u) { return u.role === 'customer'; }).length, '注册用户') +
+      statCard(db.users.filter(function (u) { return u.role === 'rider'; }).length, '注册骑手') +
       statCard(orders.length, '累计订单') +
       statCard(todayCnt, '今日订单') +
       statCard(fmtMoney(revenue), '累计营收（元）') +
@@ -519,19 +643,29 @@
         '<span class="muted" style="width:70px;text-align:right">¥' + fmtMoney(r.rev) + '</span></div>';
     });
     h += '</div>';
+
+    // 用户列表
+    h += '<div class="card"><b style="font-size:15px">用户列表</b>';
+    db.users.forEach(function (u) {
+      h += '<div class="rank-row"><span style="width:130px"><b>' + esc(u.username) + '</b></span>' +
+        '<span class="bar-wrap" style="background:none"><span class="tag">' + ROLE_TEXT[u.role] + '</span>' +
+        (u.phone ? ' <span class="muted">' + esc(u.phone) + '</span>' : '') + '</span></div>';
+    });
+    h += '</div>';
     app.innerHTML = h;
   }
 
   /* ---------- 通用组件 ---------- */
 
-  function tabBtn(id, label, cur) {
-    return '<button class="tab-btn' + (cur === id ? ' active' : '') + '" onclick="App.switchTab(\'' + id + '\')">' + label + '</button>';
+  function tabBtn(id, label, curTab) {
+    return '<button class="tab-btn' + (curTab === id ? ' active' : '') + '" onclick="App.switchTab(\'' + id + '\')">' + label + '</button>';
   }
   function statCard(num, label) {
     return '<div class="stat-card"><div class="num">' + num + '</div><div class="label">' + esc(label) + '</div></div>';
   }
 
   function orderCard(o, viewer) {
+    var u = cur();
     var m = findMerchant(o.merchantId);
     var h = '<div class="o-card"><div class="head"><b>' + esc(m ? m.name : '商家') +
       ' <span class="muted" style="font-weight:400">#' + o.id + '</span></b>' +
@@ -567,10 +701,10 @@
     if (viewer === 'rider' && o.status === 'accepted') {
       h += '<button class="btn small" onclick="App.claim(' + o.id + ')">抢单</button>';
     }
-    if (viewer === 'rider' && o.status === 'delivering' && o.rider === 'bob') {
+    if (viewer === 'rider' && o.status === 'delivering' && o.rider === u.username) {
       h += '<button class="btn small green" onclick="App.deliver(' + o.id + ')">我已送达</button>';
     }
-    if (viewer === 'customer' && o.userName === 'alice') {
+    if (viewer === 'customer' && o.userName === u.username) {
       if (o.status === 'pending_accept') h += '<button class="btn small ghost" onclick="App.cancel(' + o.id + ')">取消订单</button>';
       if (o.status === 'delivered' && !o.comment) {
         h += '<button class="btn small" onclick="App.openComment(' + o.id + ')">评价</button>';
@@ -593,7 +727,6 @@
   }
 
   function openComment(id) {
-    var o = db.orders.filter(function (x) { return x.id === id; })[0];
     var html =
       '<form onsubmit="return App.comment(' + id + ',this)">' +
       '<h3 style="margin-bottom:12px">评价订单 #' + id + '</h3>' +
@@ -610,18 +743,110 @@
 
   window.App = {
     reset: reset,
-    switchRole: function (r) { state.role = r; state.currentMerchant = r === 'customer' ? state.currentMerchant : null; render(); },
+    pickRole: function (r) {
+      loginRole = r;
+      // 就地更新登录界面，避免清空已输入内容
+      document.querySelectorAll('.role-card').forEach(function (c) {
+        c.classList.toggle('active', c.dataset.role === r);
+      });
+      var lb = document.getElementById('loginBtn');
+      if (lb) lb.textContent = '以「' + ROLE_TEXT[r] + '」身份登录';
+      var mf = document.getElementById('rgMerchantNameField');
+      if (mf) mf.style.display = r === 'merchant' ? 'block' : 'none';
+    },
+    switchPane: switchPane,
+    fillDemoAccount: function (username) {
+      var user = findUser(username);
+      if (!user) return;
+      this.pickRole(user.role);
+      switchPane('login');
+      var form = document.querySelector('#paneLogin form');
+      form.username.value = username;
+      form.password.value = '123456';
+    },
+    doLogin: function (f) {
+      var u = f.username.value.trim();
+      var p = f.password.value;
+      var user = findUser(u);
+      if (!user) { toast('用户不存在'); return false; }
+      if (user.password !== p) { toast('密码错误'); return false; }
+      if (user.role !== loginRole) {
+        toast('身份选择不正确：该账号是「' + ROLE_TEXT[user.role] + '」，请重新选择');
+        return false;
+      }
+      db.session = user.username;
+      state.cart = {}; state.currentMerchant = null;
+      state.customerTab = 'order'; state.merchantTab = 'pending'; state.riderTab = 'hall';
+      save(); render();
+      toast('登录成功，欢迎 ' + user.username);
+      return false;
+    },
+    doRegister: function (f) {
+      var u = f.username.value.trim();
+      var p = f.password.value;
+      var phone = f.phone.value.trim();
+      var shopName = f.merchantName ? f.merchantName.value.trim() : '';
+      if (!/^[\u4e00-\u9fa5A-Za-z0-9]{2,20}$/.test(u)) { toast('用户名需 2-20 位字母 / 数字 / 中文'); return false; }
+      if (p.length < 6) { toast('密码至少 6 位'); return false; }
+      if (findUser(u)) { toast('用户名已被注册'); return false; }
+      if (loginRole === 'merchant' && !shopName) { toast('商家注册需填写店铺名称'); return false; }
+      var user = { id: db.seq.user++, username: u, password: p, role: loginRole, phone: phone };
+      db.users.push(user);
+      if (loginRole === 'merchant') {
+        db.merchants.push({ id: db.seq.merchant++, name: shopName, phone: phone || '', address: '（新店开业）', rating: 5.0, owner: u });
+      }
+      save();
+      toast('注册成功，请登录');
+      switchPane('login');
+      var form = document.querySelector('#paneLogin form');
+      form.username.value = u;
+      form.password.value = '';
+      return false;
+    },
+    sendCode: function () {
+      var name = document.getElementById('fpUsername').value.trim();
+      var user = findUser(name);
+      if (!user) { toast('用户不存在'); return; }
+      var code = '';
+      for (var i = 0; i < 6; i++) code += Math.floor(Math.random() * 10);
+      db.resetCode = { username: name, code: code };
+      save();
+      var tip = document.getElementById('fpCodeTip');
+      tip.style.display = 'block';
+      tip.textContent = '验证码：' + code + '（演示环境直接显示，真实项目会通过邮件 / 短信发送）';
+    },
+    doReset: function (f) {
+      var name = document.getElementById('fpUsername').value.trim();
+      var code = f.code.value.trim();
+      var np = f.newPassword.value;
+      var user = findUser(name);
+      if (!user) { toast('用户不存在'); return false; }
+      if (!db.resetCode || db.resetCode.username !== name || db.resetCode.code !== code) {
+        toast('验证码错误'); return false;
+      }
+      if (np.length < 6) { toast('新密码至少 6 位'); return false; }
+      user.password = np;
+      db.resetCode = null;
+      save();
+      toast('密码重置成功，请用新密码登录');
+      switchPane('login');
+      var form = document.querySelector('#paneLogin form');
+      form.username.value = name;
+      form.password.value = '';
+      return false;
+    },
     switchTab: function (t) {
-      if (state.role === 'customer') state.customerTab = t;
-      else if (state.role === 'merchant') state.merchantTab = t;
+      var u = cur();
+      if (u.role === 'customer') state.customerTab = t;
+      else if (u.role === 'merchant') state.merchantTab = t;
       else state.riderTab = t;
       render();
     },
     enterMerchant: function (id) { state.currentMerchant = id; render(); },
     cartAdd: function (id, delta) {
       var d = db.dishes.filter(function (x) { return x.id === id; })[0];
-      var cur = state.cart[id] || 0;
-      var next = cur + delta;
+      var curQty = state.cart[id] || 0;
+      var next = curQty + delta;
       if (next < 0) next = 0;
       if (next > d.stock) { toast('最多只能买 ' + d.stock + ' 份'); return; }
       if (next === 0) delete state.cart[id]; else state.cart[id] = next;
@@ -639,6 +864,19 @@
     },
     mAct: function (id, act) { merchantAction(id, act); render(); },
     toggleDish: function (id) { toggleDish(id); render(); },
+    addDish: function (f) {
+      var u = cur();
+      var me = db.merchants.filter(function (m) { return m.owner === u.username; })[0];
+      var name = f.name.value.trim();
+      var price = parseFloat(f.price.value);
+      var stock = parseInt(f.stock.value, 10);
+      if (!name) { toast('请填写菜品名'); return false; }
+      if (!isFinite(price) || price <= 0) { toast('价格需为正数'); return false; }
+      if (!isFinite(stock) || stock < 0) { toast('库存需为非负整数'); return false; }
+      db.dishes.push({ id: db.seq.dish++, merchantId: me.id, name: name, price: price, stock: stock, category: f.category.value, emoji: f.emoji.value, onShelf: true });
+      save(); toast('菜品已添加'); render();
+      return false;
+    },
     reply: function (id) {
       var o = db.orders.filter(function (x) { return x.id === id; })[0];
       var txt = prompt('回复顾客评价：', o.comment && o.comment.reply ? o.comment.reply : '');
@@ -663,9 +901,6 @@
 
   /* ---------------- 启动 ---------------- */
 
-  document.querySelectorAll('.role-btn').forEach(function (b) {
-    b.addEventListener('click', function () { window.App.switchRole(this.dataset.role); });
-  });
   document.getElementById('resetBtn').addEventListener('click', function () {
     if (confirm('确定重置演示数据吗？当前操作记录将丢失。')) reset();
   });

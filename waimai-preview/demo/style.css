@@ -92,10 +92,28 @@ h2.sec { font-size: 20px; margin: 26px 0 14px; }
 .cmt .reply b { color: var(--green); }
 
 /* 表单 */
-textarea, select, input[type=text] { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; margin-top: 6px; }
+textarea, select, input[type=text], input[type=password] { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; margin-top: 6px; }
 textarea { min-height: 64px; resize: vertical; }
 .field { margin-bottom: 12px; }
 .field label { font-size: 13px; color: var(--sub); display: block; }
+
+/* 登录 / 注册 / 找回密码 */
+.auth-wrap { display: flex; justify-content: center; padding: 30px 0 50px; }
+.auth-card { width: 100%; max-width: 430px; padding: 26px 28px; }
+.role-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.role-card { border: 2px solid var(--border); border-radius: 12px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all .15s; background: #fff; }
+.role-card .ico { font-size: 24px; }
+.role-card .name { font-size: 13px; margin-top: 4px; color: var(--sub); }
+.role-card.active { border-color: var(--primary); background: #fff1e6; }
+.role-card.active .name { color: var(--primary-dark); font-weight: 700; }
+.switch-line { text-align: center; font-size: 13px; color: var(--sub); margin-top: 14px; }
+.switch-line a { font-weight: 600; cursor: pointer; color: var(--primary); }
+.demo-accounts { margin-top: 18px; font-size: 12px; color: var(--sub); line-height: 2; }
+.demo-accounts code { background: #f3f4f6; border-radius: 6px; padding: 1px 8px; cursor: pointer; margin: 0 2px; }
+.demo-accounts code:hover { background: #fff1e6; color: var(--primary-dark); }
+.code-tip { font-size: 13px; color: var(--primary-dark); background: #fff1e6; border-radius: 8px; padding: 8px 12px; margin: -4px 0 12px; }
+.user-chip { background: #fff1e6; color: var(--primary-dark); border-radius: 999px; padding: 5px 14px; font-size: 13px; font-weight: 600; }
+#userBox { display: flex; align-items: center; gap: 12px; }
 
 /* 统计 */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
