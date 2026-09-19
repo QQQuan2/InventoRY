@@ -89,6 +89,7 @@ h1, h2 { margin: 0; font-weight: 600; }
 
 /* ---------- 空状态 ---------- */
 .empty-state { display: flex; justify-content: center; padding: 48px 16px; }
+.empty-state[hidden] { display: none; }
 .empty-state__card {
   text-align: center;
   background: var(--surface);
