@@ -35,8 +35,7 @@
   .shot .cap span { color: var(--sub); font-size: 13px; line-height: 1.6; }
   .roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 10px; }
   .role { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
-  .role .ico { font-size: 30px; }
-  .role b { display: block; margin: 8px 0 6px; }
+  .role b { display: block; margin-bottom: 6px; font-size: 15px; }
   .role p { color: var(--sub); font-size: 13px; line-height: 1.7; }
   .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 20px 0; }
   .flow .step { background: #fff; border: 1px solid var(--border); padding: 10px 16px; border-radius: 999px; font-size: 14px; }
@@ -50,28 +49,29 @@
 <body>
 
 <div class="hero">
-  <h1>🍔 外卖配送系统</h1>
-  <p>一个完整可运行的外卖点餐与配送管理平台：顾客、商家、骑手、管理员四种角色数据联动，覆盖下单 → 接单 → 配送 → 送达 → 评价 → 回复的完整业务闭环。</p>
+  <h1>外卖配送系统</h1>
+  <p>外卖点餐与配送管理平台：顾客、商家、骑手、管理员四种角色数据联动，覆盖下单、接单、配送、送达、评价、回复的完整业务流程。</p>
   <div class="btns">
-    <a class="btn btn-solid" href="https://github.com/QQQuan2/InventoRY/tree/main/waimai-delivery-system/waimai-delivery-system">📦 查看源代码</a>
-    <a class="btn btn-ghost" href="#run">🚀 本地试运行</a>
+    <a class="btn btn-solid" href="https://github.com/QQQuan2/InventoRY/tree/main/waimai-delivery-system">查看源代码</a>
+    <a class="btn btn-ghost" href="./demo/">在线试运行</a>
+    <a class="btn btn-ghost" href="#run">本地运行</a>
   </div>
 </div>
 
 <div class="container">
 
-  <h2>🔁 业务闭环</h2>
-  <p class="sub">每个环节都由不同角色操作，数据实时联动</p>
+  <h2>业务闭环</h2>
+  <p class="sub">每个环节由不同角色操作，数据实时联动</p>
   <div class="flow">
-    <div class="step">🛒 顾客下单</div><div class="arrow">→</div>
-    <div class="step">✅ 商家接单</div><div class="arrow">→</div>
-    <div class="step">🛵 骑手抢单</div><div class="arrow">→</div>
-    <div class="step">📦 配送送达</div><div class="arrow">→</div>
-    <div class="step">⭐ 顾客评价</div><div class="arrow">→</div>
-    <div class="step">💬 商家回复</div>
+    <div class="step">顾客下单</div><div class="arrow">→</div>
+    <div class="step">商家接单</div><div class="arrow">→</div>
+    <div class="step">骑手抢单</div><div class="arrow">→</div>
+    <div class="step">配送送达</div><div class="arrow">→</div>
+    <div class="step">顾客评价</div><div class="arrow">→</div>
+    <div class="step">商家回复</div>
   </div>
 
-  <h2>🖼️ 界面预览</h2>
+  <h2>界面预览</h2>
   <p class="sub">真实运行截图 · 1280×860</p>
   <div class="shots">
     <div class="shot">
@@ -96,18 +96,18 @@
     </div>
   </div>
 
-  <h2>👥 四种角色</h2>
+  <h2>四种角色</h2>
   <div class="roles">
-    <div class="role"><div class="ico">🛍️</div><b>顾客</b><p>浏览下单、地址簿管理、订单跟踪、环保餐具选择、评价打分</p></div>
-    <div class="role"><div class="ico">🏪</div><b>商家</b><p>接单拒单、菜品上下架、实拍图上传、评价回复、营收统计</p></div>
-    <div class="role"><div class="ico">🛵</div><b>骑手</b><p>抢单大厅、配送状态流转、送达确认、个人收入统计</p></div>
-    <div class="role"><div class="ico">📊</div><b>管理员</b><p>全平台数据看板、用户管理、商家运营情况一览</p></div>
+    <div class="role"><b>顾客</b><p>浏览下单、地址簿管理、订单跟踪、环保餐具选择、评价打分</p></div>
+    <div class="role"><b>商家</b><p>接单拒单、菜品上下架、实拍图上传、评价回复、营收统计</p></div>
+    <div class="role"><b>骑手</b><p>抢单大厅、配送状态流转、送达确认、个人收入统计</p></div>
+    <div class="role"><b>管理员</b><p>全平台数据看板、用户管理、商家运营情况一览</p></div>
   </div>
 
-  <h2 id="run">🚀 本地试运行</h2>
-  <p class="sub">需要 Python 3.10+，无需数据库安装（默认 SQLite 开箱即用）</p>
+  <h2 id="run">本地运行</h2>
+  <p class="sub">需要 Python 3.10+，默认使用 SQLite，无需另装数据库</p>
   <div class="code"><span class="c"># 1. 进入项目目录</span>
-cd waimai-delivery-system/waimai-delivery-system
+cd waimai-delivery-system
 
 <span class="c"># 2. 初始化数据库（首次运行；示例账号密码统一为 123456）</span>
 python init_db.py
@@ -115,14 +115,14 @@ python init_db.py
 <span class="c"># 3. 启动服务</span>
 python app.py
 
-<span class="c"># 打开 http://127.0.0.1:5000 即可体验 🎉</span>
+<span class="c"># 打开 http://127.0.0.1:5000</span>
 <span class="c"># 示例账号：alice / xiaomei / qiang / lina（顾客）· shop_zha（商家）· bob / zhou（骑手）· admin（管理员）</span></div>
   <p class="sub">跑通后可执行 <code>python tests/smoke_test.py</code>，70 项接口冒烟测试自动验证全流程。</p>
 
 </div>
 
 <div class="foot">
-  <p>📊 逛逛我的另一个作品：<a href="https://qqquan2.github.io/InventoRY/csv-dashboard/">CSV 数据可视化仪表盘</a></p>
+  <p>另一个作品：<a href="https://qqquan2.github.io/InventoRY/csv-dashboard/">CSV 数据可视化仪表盘</a></p>
   <p style="margin-top:8px">返回 <a href="https://github.com/QQQuan2/InventoRY">GitHub 仓库首页</a></p>
 </div>
 

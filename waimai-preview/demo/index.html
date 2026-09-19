@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外卖配送系统 · 在线试运行</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">校园外卖配送系统 <span class="badge">在线试运行</span></div>
+  <nav class="roles" id="roleNav">
+    <button data-role="customer" class="role-btn">顾客 · alice</button>
+    <button data-role="merchant" class="role-btn">商家 · shop_zha</button>
+    <button data-role="rider" class="role-btn">骑手 · bob</button>
+    <button data-role="admin" class="role-btn">管理员 · admin</button>
+  </nav>
+  <div class="topbar-right">
+    <button id="resetBtn" class="link-btn" title="恢复初始示例数据">重置数据</button>
+    <a class="link-btn" href="../">返回预览页</a>
+  </div>
+</header>
+
+<div class="notice">
+  这是外卖配送系统的浏览器端演示：业务流程、状态流转与真实 Flask 版一致，数据保存在你本地浏览器（localStorage），重置后恢复示例数据。
+  建议体验路径：顾客下单 → 商家接单 → 骑手抢单配送 → 顾客评价 → 管理员看板。
+</div>
+
+<main id="app"></main>
+
+<footer class="foot">
+  <p>纯前端演示版 · 完整后端实现（Flask + SQLite/MySQL）见 <a href="https://github.com/QQQuan2/InventoRY/tree/main/waimai-delivery-system">源码仓库</a></p>
+</footer>
+
+<script src="./app.js"></script>
+</body>
+</html>

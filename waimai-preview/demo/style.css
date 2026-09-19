@@ -1,0 +1,135 @@
+/* 外卖配送系统 · 在线试运行 演示页样式 */
+:root {
+  --primary: #ff6b1a;
+  --primary-dark: #e05a0a;
+  --bg: #f7f8fa;
+  --card: #fff;
+  --text: #222;
+  --sub: #888;
+  --border: #eee;
+  --green: #16a34a;
+  --red: #dc2626;
+  --blue: #2563eb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* 顶栏 */
+.topbar { background: #fff; border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; position: sticky; top: 0; z-index: 10; }
+.brand { font-weight: 700; font-size: 16px; }
+.badge { font-size: 12px; color: var(--primary); background: #fff1e6; border-radius: 999px; padding: 2px 10px; margin-left: 8px; font-weight: 400; }
+.roles { display: flex; gap: 8px; flex-wrap: wrap; }
+.role-btn { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; transition: all .15s; }
+.role-btn:hover { border-color: var(--primary); color: var(--primary); }
+.role-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.topbar-right { margin-left: auto; display: flex; gap: 12px; }
+.link-btn { border: none; background: none; color: var(--sub); font-size: 13px; cursor: pointer; text-decoration: none; }
+.link-btn:hover { color: var(--primary); }
+
+/* 提示条 */
+.notice { background: #fff7ed; color: #9a3412; font-size: 13px; line-height: 1.8; padding: 10px 20px; border-bottom: 1px solid #ffedd5; }
+
+main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 24px 20px 40px; }
+
+/* 通用 */
+h2.sec { font-size: 20px; margin: 26px 0 14px; }
+.sub { color: var(--sub); font-size: 13px; margin-bottom: 14px; }
+.card { background: var(--card); border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.05); margin-bottom: 14px; }
+.btn { border: none; background: var(--primary); color: #fff; border-radius: 8px; padding: 8px 18px; font-size: 14px; cursor: pointer; transition: background .15s; }
+.btn:hover { background: var(--primary-dark); }
+.btn.small { padding: 5px 12px; font-size: 13px; }
+.btn.ghost { background: #fff; color: var(--text); border: 1px solid var(--border); }
+.btn.ghost:hover { border-color: var(--primary); color: var(--primary); background: #fff; }
+.btn.danger { background: var(--red); }
+.btn.green { background: var(--green); }
+.muted { color: var(--sub); font-size: 13px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spread { justify-content: space-between; }
+
+/* 标签 / 状态 */
+.tag { display: inline-block; font-size: 12px; color: var(--primary); background: #fff1e6; border-radius: 999px; padding: 2px 10px; }
+.st { display: inline-block; font-size: 12px; border-radius: 999px; padding: 2px 10px; }
+.st.pending_accept { background: #fef3c7; color: #92400e; }
+.st.accepted { background: #dbeafe; color: #1e40af; }
+.st.delivering { background: #ede9fe; color: #5b21b6; }
+.st.delivered { background: #dcfce7; color: #166534; }
+.st.completed { background: #e5e7eb; color: #374151; }
+.st.cancelled { background: #fee2e2; color: #991b1b; }
+
+/* 商家 / 菜品卡片 */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.m-card { background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.05); cursor: pointer; transition: transform .15s; }
+.m-card:hover { transform: translateY(-2px); }
+.m-card b { display: block; font-size: 16px; margin-bottom: 4px; }
+.m-card .rating { color: var(--primary); font-size: 13px; }
+.d-card { background: var(--card); border-radius: 12px; padding: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+.d-card .dish-emoji { font-size: 34px; }
+.d-card b { display: block; margin: 6px 0 2px; font-size: 15px; }
+.d-card .price { color: var(--primary); font-weight: 700; }
+.d-card .stock { font-size: 12px; color: var(--sub); }
+.d-card.off { opacity: .45; }
+.qty { display: inline-flex; align-items: center; gap: 8px; }
+.qty button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 15px; }
+.qty span { min-width: 18px; text-align: center; font-size: 14px; }
+
+/* 购物车 */
+.cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1f2937; color: #fff; padding: 12px 20px; display: flex; align-items: center; gap: 16px; z-index: 20; }
+.cart-bar .total { font-size: 18px; font-weight: 700; color: #fbbf24; }
+.cart-items { flex: 1; font-size: 13px; color: #d1d5db; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 订单卡片 */
+.o-card { background: var(--card); border-radius: 12px; padding: 16px 18px; box-shadow: 0 2px 10px rgba(0,0,0,.05); margin-bottom: 12px; }
+.o-card .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
+.o-card .body { font-size: 14px; line-height: 1.9; }
+.o-card .items-line { color: var(--text); }
+.o-card .timeline { font-size: 12px; color: var(--sub); margin-top: 6px; line-height: 1.8; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+/* 评价 */
+.cmt { background: #fafafa; border-radius: 10px; padding: 12px 14px; margin-top: 10px; font-size: 14px; }
+.cmt .stars { color: #f59e0b; }
+.cmt .reply { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); color: var(--sub); }
+.cmt .reply b { color: var(--green); }
+
+/* 表单 */
+textarea, select, input[type=text] { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 14px; font-family: inherit; margin-top: 6px; }
+textarea { min-height: 64px; resize: vertical; }
+.field { margin-bottom: 12px; }
+.field label { font-size: 13px; color: var(--sub); display: block; }
+
+/* 统计 */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+.stat-card .num { font-size: 24px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: var(--sub); margin-top: 4px; }
+
+/* 纯 CSS 柱状图 */
+.chart { display: flex; align-items: flex-end; gap: 10px; height: 180px; padding: 10px 4px 0; }
+.chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.chart .bar { width: 70%; max-width: 46px; background: linear-gradient(180deg, #ffb37a, var(--primary)); border-radius: 6px 6px 0 0; min-height: 3px; position: relative; }
+.chart .bar .val { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--sub); white-space: nowrap; }
+.chart .day { font-size: 11px; color: var(--sub); }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--sub); margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+/* 榜单 */
+.rank-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+.rank-row:last-child { border-bottom: none; }
+.rank-row .bar-wrap { flex: 1; height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+.rank-row .bar-fill { height: 100%; background: var(--primary); border-radius: 4px; }
+
+/* tabs */
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab-btn { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 7px 16px; font-size: 14px; cursor: pointer; }
+.tab-btn.active { background: var(--text); border-color: var(--text); color: #fff; }
+
+.empty { text-align: center; color: var(--sub); padding: 30px 0; font-size: 14px; }
+.empty .big { font-size: 36px; margin-bottom: 8px; }
+
+.foot { text-align: center; color: var(--sub); font-size: 13px; padding: 20px 0 30px; }
+.foot a { color: var(--primary); text-decoration: none; }
+
+@media (max-width: 640px) {
+  .topbar { padding: 10px 12px; }
+  main { padding: 16px 12px 40px; }
+}
