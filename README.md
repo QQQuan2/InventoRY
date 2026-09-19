@@ -6,15 +6,13 @@
 
 ### 1. 外卖配送系统 · [waimai-delivery-system/](waimai-delivery-system/)
 
-![界面预览：顾客端点餐页](waimai-delivery-system/docs/screenshots/02-customer.png)
-*界面预览 · 顾客端点餐页（更多截图见[预览页](https://qqquan2.github.io/InventoRY/waimai-preview/)）*
+简介：该项目为《管理信息系统》课程期末项目：一个可以真正跑起来的外卖点餐与配送管理系统，四种角色数据互相联动。
 
-《管理信息系统》课程期末项目：一个可以真正跑起来的外卖点餐与配送管理系统，四种角色数据互相联动。
 
 **在线体验**：
 
-- 在线试运行（浏览器直接操作，无需安装）：[外卖系统 · 在线试运行](https://qqquan2.github.io/InventoRY/waimai-preview/demo/)
-- 在线预览（全部界面截图）：[外卖系统 · 预览页](https://qqquan2.github.io/InventoRY/waimai-preview/)
+- 在线试运行：[外卖系统 · 在线试运行](https://qqquan2.github.io/InventoRY/waimai-preview/demo/)
+- 效果预览（全部界面截图）：[外卖系统 · 预览页](https://qqquan2.github.io/InventoRY/waimai-preview/)
 
 **源代码**：点击 [waimai-delivery-system/](waimai-delivery-system/) 文件夹查看（含 [详细文档](waimai-delivery-system/README.md)）
 
@@ -41,14 +39,11 @@ python app.py         # 启动服务
 
 ### 2. CSV 数据可视化仪表盘 · [csv-dashboard/](csv-dashboard/)
 
-![界面预览：CSV 仪表盘图表](csv-dashboard/docs/screenshot.png)
-*界面预览 · 上传示例数据后的概览与图表*
-
-上传本地 CSV 文件，即可预览、统计与可视化的纯前端仪表盘。
+简介：该项目为《人工智能与机器学习》课堂作业：上传本地 CSV 文件，即可预览、统计与可视化的纯前端仪表盘。
 
 **在线体验**：
 
-- 在线试运行（浏览器直接操作，无需安装）：[CSV 仪表盘](https://qqquan2.github.io/InventoRY/csv-dashboard/)
+- 在线试运行：[CSV 仪表盘](https://qqquan2.github.io/InventoRY/csv-dashboard/)
 
 **源代码**：点击 [csv-dashboard/](csv-dashboard/) 文件夹查看
 
